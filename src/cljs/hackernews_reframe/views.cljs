@@ -5,18 +5,32 @@
     ))
 
 ;; news
-(defn post-row [title posted-by points comments-count]
-  [:div
-   [:p title]
-   [:p posted-by]
-   [:p points]
-   [:p comments-count]])
+(defn post-row [post-id title posted-by points comments-count]
+  [:article.media
+   [:figure.media-left
+    [:a.like-dislike [:i.fas.fa-arrow-up]]
+    [:a.like-dislike [:i.fas.fa-arrow-down]]]
+   [:div.media-content
+    [:div#small-content.content
+     [:p
+      [:small " " points " points by "] [:a posted-by]
+      [:br] [:strong title]]]
+    [:nav.level.is-mobile
+     [:div.level-left
+      [:a.level-item
+       [:span [:small "share"]]]
+      [:a.level-item
+       [:span [:small "hide"]]]
+      [:a.level-item
+       [:span [:small " " comments-count " comments"]]]]]]])
 
 (defn news-panel []
-  [:div.container
-   [post-row "title" "giovani" 10 20]
-   ]
-  )
+  [:div.container-fluid
+   [post-row "1" "title of the article whatever or yolo" "giovani" 10 20]
+   [post-row "2" "title of the article whatever or yolo" "giovani" 10 20]
+   [post-row "3" "title of the article whatever or yolo" "giovani" 10 20]
+   [post-row "4" "title of the article whatever or yolo" "giovani" 10 20]
+   ])
 
 (defn login-panel []
   [:div.container
@@ -62,8 +76,30 @@
     [:div.control
      [:button.button.is-success "Submit"]]]])
 
+;go to date or search by keyword, show only 30 itens, but allow it to go further
 (defn past-panel []
-  )
+  [:div.container-fluid
+   [:div.columns.is-centered.space-left
+    [:div.field.column.is-3
+     [:label.label "Date"]
+     [:div.field.has-addons
+      [:p.control.has-icons-left
+       [:div.control
+        [:input.input {:type "date"}]]
+       [:span.icon.is-small.is-left
+        [:i.fas.fa-calendar]]]
+      [:div.control
+       [:a.button.is-info "Search"]]]]
+    [:div.field.column.is-3
+     [:label.label "Keyword"]
+     [:div.field.has-addons
+      [:p.control.has-icons-left
+       [:div.control
+        [:input.input {:type "text" :placeholder "Search Keyword"}]]
+       [:span.icon.is-small.is-left
+        [:i.fas.fa-search]]]
+      [:div.control
+       [:a.button.is-info "Search"]]]]]])
 
 (defn sign-panel []
   [:div.container
@@ -104,7 +140,41 @@
 
 (defn comment-panel [])
 
-(defn user-panel [])
+(defn user-panel []
+  [:div.container-fluid
+
+   [:div.columns.space-left
+    [:div.column.is-2.column-text
+     [:label.label "Username"]]
+    [:div.column.is-3.column-text
+     [:input.input {:type "text" :readOnly true}]]]
+
+   [:div.columns.space-left
+    [:div.column.is-2.column-text
+     [:label.label "E-Mail"]]
+    [:div.column.is-3.column-text
+     [:input.input {:type "text" :readOnly true}]]]
+
+   [:div.columns.space-left
+    [:div.column.is-2.column-text
+     [:label.label "Created At"]]
+    [:div.column.is-2.column-text
+     [:input.input {:type "text" :readOnly true}]]]
+
+   [:div.columns.space-left
+    [:div.column.is-2.column-text
+     [:label.label "Karma"]]
+    [:div.column.is-2.column-text
+     [:input.input {:type "text" :readOnly true}]]]
+
+   [:div.columns.space-left
+    [:div.column.is-2.column-text
+     [:label.label "About You"]]
+    [:div.column.is-6
+     [:textarea.textarea]]]
+
+   [:div.columns.is-centered.space-left [:div.column.is-2 [:button.button [:small "Posts"]]] [:div.column.is-2 [:button.button [:small "Comments"]]]]]
+  )
 
 ;; main
 
@@ -144,7 +214,7 @@
         [:a.button {:href "#/login"} "Log in"]]]]]]
    (let [active-panel (re-frame/subscribe [::subs/active-panel])]
      [show-panel @active-panel])
-   [:footer.footer
+   [:footer.footer.is-fixed-bottom
     [:div.content.has-text-centered
      [:p "This is a Hacker News homage with Lacinia Pedestal and Re-Frame."]
      [:p "For info check the Github Project, front-end and back-end."]]]])

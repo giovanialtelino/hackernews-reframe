@@ -12,3 +12,32 @@ color:black;
 .footer{
     padding: 1rem 1.5rem 1rem;
 }
+
+#small-content{
+   margin: 0px 0px 0px 0px;
+}
+
+.media{
+    align-items: center;
+    margin-left:10px;
+}
+
+.like-dislike{
+margin-right: 9px;}
+
+.space-left{
+margin-left: 10px;
+margin-right: 10px;}
+
+.column-text{
+align-self:center;
+    padding-bottom: 0px;
+}
+
+footer {
+  bottom: 0;
+  left: 0;
+  position: fixed;
+  right: 0;
+  z-index: 30;
+}
