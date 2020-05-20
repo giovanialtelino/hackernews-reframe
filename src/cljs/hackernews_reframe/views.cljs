@@ -1,7 +1,10 @@
 (ns hackernews-reframe.views
   (:require
+    [reagent.core :as reagent]
     [re-frame.core :as re-frame]
     [hackernews-reframe.subs :as subs]
+    [hackernews-reframe.events :as events]
+    [clojure.string :as str]
     ))
 
 ;; news
@@ -29,8 +32,7 @@
    [post-row "1" "title of the article whatever or yolo" "giovani" 10 20]
    [post-row "2" "title of the article whatever or yolo" "giovani" 10 20]
    [post-row "3" "title of the article whatever or yolo" "giovani" 10 20]
-   [post-row "4" "title of the article whatever or yolo" "giovani" 10 20]
-   ])
+   [post-row "4" "title of the article whatever or yolo" "giovani" 10 20]])
 
 (defn login-panel []
   [:div.container
@@ -39,22 +41,32 @@
      [:label.label "Username"]
      [:p.control.has-icons-left
       [:div.control
-       [:input.input {:type "text" :placeholder "Username"}]]
+       [:input.input {:type        "text"
+                      :placeholder "Username"
+                      :value       @(re-frame/subscribe [::subs/email])
+                      :on-change   #(re-frame/dispatch [::events/change-email (-> % .-target .-value)])}]]
       [:span.icon.is-small.is-left
        [:i.fas.fa-user]]]]
     [:div.field.column.is-4
      [:label.label "Password"]
      [:p.control.has-icons-left
       [:div.control
-       [:input.input {:type "password" :placeholder "Password"}]]
+       [:input.input {:type        "password"
+                      :placeholder "Password"
+                      :value       @(re-frame/subscribe [::subs/pwd])
+                      :on-change   #(re-frame/dispatch [::events/change-pwd (-> % .-target .-value)])}]]
       [:span.icon.is-small.is-left
        [:i.fas.fa-lock]]]]]
    [:div.columns.is-centered
     [:div.field.is-grouped
      [:div.control
-      [:button.button.is-success "Login"]]
+      [:button.button.is-success
+       {:on-click #(re-frame/dispatch [::events/login])} "Login"]]
      [:div.control
-      [:button.button.is-light "Forgot Password"]]]]])
+      [:button.button.is-light "Forgot Password"]]]]
+   (let [login-error @(re-frame/subscribe [::subs/login-error])]
+     (if-not (nil? login-error)
+       [:div.columns.is-centered.space-left [:span [:strong login-error]]]))])
 
 (defn post-panel []
   [:div.container
@@ -108,14 +120,22 @@
      [:label.label "Username"]
      [:p.control.has-icons-left
       [:div.control
-       [:input.input {:type "text" :placeholder "Username"}]]
+       [:input.input {:type        "text"
+                      :placeholder "Username"
+                      :value       @(re-frame/subscribe [::subs/new-usr])
+                      :on-change   #(re-frame/dispatch [::events/change-new-usr (-> % .-target .-value)])
+                      }]]
       [:span.icon.is-small.is-left
        [:i.fas.fa-user]]]]
     [:div.field.column.is-4
      [:label.label "Email"]
      [:p.control.has-icons-left
       [:div.control
-       [:input.input {:type "text" :placeholder "Username"}]]
+       [:input.input {:type        "text"
+                      :placeholder "Email"
+                      :value       @(re-frame/subscribe [::subs/new-email])
+                      :on-change   #(re-frame/dispatch [::events/change-new-email (-> % .-target .-value)])
+                      }]]
       [:span.icon.is-small.is-left
        [:i.fas.fa-envelope]]]]]
    [:div.columns.is-centered
@@ -123,20 +143,38 @@
      [:label.label "Password"]
      [:p.control.has-icons-left
       [:div.control
-       [:input.input {:type "password" :placeholder "Password"}]]
+       [:input.input {:type        "password"
+                      :placeholder "Password"
+                      :value       @(re-frame/subscribe [::subs/new-pwd])
+                      :on-change   #(re-frame/dispatch [::events/change-new-pwd (-> % .-target .-value)])
+                      }]]
       [:span.icon.is-small.is-left
        [:i.fas.fa-lock]]]]
     [:div.field.column.is-4
      [:label.label "Confirm Password"]
      [:p.control.has-icons-left
       [:div.control
-       [:input.input {:type "password" :placeholder "Password"}]]
+       [:input.input {:type        "password"
+                      :placeholder "Password"
+                      :value       @(re-frame/subscribe [::subs/pwd-new-conf])
+                      :on-change   #(re-frame/dispatch [::events/change-new-pwd-conf (-> % .-target .-value)])}]]
       [:span.icon.is-small.is-left
        [:i.fas.fa-lock]]]]]
    [:div.columns.is-centered
     [:div.field.column.is-1
      [:div.control
-      [:button.button.is-success.login-btn "Create User"]]]]])
+      (let [equal @(re-frame/subscribe [::subs/confirm-pwd])
+            not-nil (nil? @(re-frame/subscribe [::subs/new-pwd]))]
+        (if (and equal (not not-nil))
+          [:button.button.is-success.login-btn
+           {:on-click #(re-frame/dispatch [::events/sign])}
+           "Create User"]
+          [:button.button.is-danger.login-btn "Create User"]
+          ))]]]
+
+   (let [login-error @(re-frame/subscribe [::subs/signup-error])]
+     (if-not (nil? login-error)
+       [:div.columns.is-centered.space-left [:span [:strong login-error]]]))   ])
 
 (defn comment-panel [])
 
@@ -209,13 +247,18 @@
       [:a.navbar-item {:href "#/submit"} "Submit"]]
      [:div.navbar-end
       [:div.navbar-item
-       [:div.buttons
-        [:a.button {:href "#/sign"} "Sign up"]
-        [:a.button {:href "#/login"} "Log in"]]]]]]
+       (let [is-logged-in @(re-frame/subscribe [::subs/username])]
+         (if (nil? is-logged-in)
+           [:div.buttons
+            [:a.button {:href "#/sign"} "Sign up"]
+            [:a.button {:href "#/login"} "Log in"]]
+           [:div.buttons
+            [:a.navbar-item {:href "#/user"} is-logged-in]
+            [:a.navbar-item {:href     "#/"
+                             :on-click #(re-frame/dispatch [::events/logout])} "logout"]]))]]]]
    (let [active-panel (re-frame/subscribe [::subs/active-panel])]
      [show-panel @active-panel])
    [:footer.footer.is-fixed-bottom
     [:div.content.has-text-centered
      [:p "This is a Hacker News homage with Lacinia Pedestal and Re-Frame."]
-     [:p "For info check the Github Project, front-end and back-end."]]]])
-
+     [:p "For info check the Github Project, " [:a {:target "_blank" :href "https://github.com/giovanialtelino/hackernews-reframe"} "front-end"] " and " [:a {:target "_blank" :href "https://github.com/giovanialtelino/hackernews-lacinia-datomic"} "back-end"] "."]]]])

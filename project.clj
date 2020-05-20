@@ -8,6 +8,9 @@
                  [reagent "0.10.0"]
                  [re-frame "0.12.0"]
                  [day8.re-frame/tracing "0.5.5"]
+                 [cljs-ajax "0.8.0"]
+                 [day8.re-frame/http-fx "v0.2.0"]
+                 [re-graph "0.1.12"]
                  [secretary "1.2.3"]]
 
   :plugins [[lein-shadow "0.1.7"]

@@ -2,4 +2,6 @@
 
 (def default-db
   {:name "re-frame"
-   :active-panel :news-panel})
+   :active-panel :news-panel
+   :email nil
+   :pwd nil})
