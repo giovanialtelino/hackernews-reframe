@@ -58,6 +58,22 @@
     (:new-usr db)))
 
 (re-frame/reg-sub
+  ::new-title
+  (fn [db _]
+    (:new-title db)))
+
+(re-frame/reg-sub
+  ::new-url
+  (fn [db _]
+    (:new-url db)))
+
+(re-frame/reg-sub
   ::confirm-pwd
   (fn [db _]
     (= (:pwd-new-conf db) (:new-pwd db))))
+
+(re-frame/reg-sub
+  ::non-nil-url-subs
+  (fn [db _]
+    (or (empty? (:new-url db)) (empty? (:new-title db)))))
+

@@ -73,20 +73,26 @@
    [:div.field
     [:label.label "Title"]
     [:div.control
-     [:input.input {:type "text" :placeholder "Post Title"}]]]
+     [:input.input {:type        "text"
+                    :placeholder "Post Title"
+                    :value       @(re-frame/subscribe [::subs/new-title])
+                    :on-change   #(re-frame/dispatch [::events/change-new-title (-> % .-target .-value)])}]]]
    [:div.field
     [:label.label "URL"]
     [:div.control
-     [:input.input {:type "text" :placeholder "Article HTTPS URL"}]]]
-   [:div.columns.is-centered
-    [:p "OR"]]
-   [:div.field
-    [:label.label "Text"]
-    [:div.control
-     [:textarea.textarea]]]
+     [:input.input {:type        "text"
+                    :placeholder "Article HTTPS URL"
+                    :value       @(re-frame/subscribe [::subs/new-url])
+                    :on-change   #(re-frame/dispatch [::events/change-new-url (-> % .-target .-value)])}]]]
    [:div.field
     [:div.control
-     [:button.button.is-success "Submit"]]]])
+     (let [non-nil @(re-frame/subscribe [::subs/non-nil-url-subs])
+           usr (nil? @(re-frame/subscribe [::subs/username]))]
+       (if (or non-nil usr)
+         [:button.button.is-danger "Submit"]
+         [:button.button.is-success
+          {:on-click #(re-frame/dispatch [::events/submit-post])}
+          "Submit"]))]]])
 
 ;go to date or search by keyword, show only 30 itens, but allow it to go further
 (defn past-panel []
@@ -174,7 +180,7 @@
 
    (let [login-error @(re-frame/subscribe [::subs/signup-error])]
      (if-not (nil? login-error)
-       [:div.columns.is-centered.space-left [:span [:strong login-error]]]))   ])
+       [:div.columns.is-centered.space-left [:span [:strong login-error]]]))])
 
 (defn comment-panel [])
 
@@ -205,16 +211,15 @@
     [:div.column.is-2.column-text
      [:input.input {:type "text" :readOnly true}]]]
 
-   [:div.columns.space-left
-    [:div.column.is-2.column-text
-     [:label.label "About You"]]
-    [:div.column.is-6
-     [:textarea.textarea]]]
-
    [:div.columns.is-centered.space-left [:div.column.is-2 [:button.button [:small "Posts"]]] [:div.column.is-2 [:button.button [:small "Comments"]]]]]
   )
 
 ;; main
+[:div.columns.space-left
+ [:div.column.is-2.column-text
+  [:label.label "About You"]]
+ [:div.column.is-6
+  [:textarea.textarea]]]
 
 (defn- panels [panel-name]
   (case panel-name

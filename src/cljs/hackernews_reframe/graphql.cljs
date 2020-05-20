@@ -18,3 +18,66 @@
      error
      user {name}}}")
 
+(def get-comment
+  "comment($id:String!){
+  comment(id:$id){
+  child
+  father_id
+  father_name
+  id
+  postedBy
+  postedSince
+  text
+  votes
+  }}")
+
+(def feed
+  "feed($first:Int, $orderBy:String, $skip:Int){
+  feed(first:$first, orderBy:$orderBy, skip:$skip){
+  comments
+  createdAt
+  description
+  error
+  id
+  order
+  postedBy
+  url
+  votes
+  }}")
+
+(def get-link
+  "link($id:String!){
+  link(id:$id){
+   comments
+   createdAt
+   description
+   error
+   id
+   order
+   postedBy
+   url
+   votes
+   commentList{
+    child
+    father_id
+    father_name
+    id
+    postedBy
+    postedSince
+    text
+    votes }}")
+
+(def post
+  "post($description:String!, $url:String!){
+  post(description:$description, url:$url){
+    comments
+    createdAt
+    description
+    error
+    id
+    order
+    postedBy
+    url
+    votes  }}"
+  )
+

@@ -13,6 +13,20 @@
 (defn- remove-local-storage [key]
   (.removeItem js/localStorage key))
 
+(defn- get-local-storage [key]
+  (.getItem js/localStorage key))
+
+(def re-graph-init {:ws-url          nil
+                    :http-url        "http://localhost:8080/graphql"
+                    :http-parameters {:with-credentials? false}})
+
+(re-frame/dispatch [::re-graph/init re-graph-init])
+
+(re-frame/reg-event-db
+  ::update-re-graph
+  (fn-traced [db [_ token]]
+             (assoc-in db [:re-graph :re-graph.internals/default :http-parameters :headers] {"Authorization" token})))
+
 (re-frame/reg-fx
   :set-local-store
   (fn [array]
@@ -30,11 +44,6 @@
   (fn []
     (remove-local-storage "token")
     (remove-local-storage "refresh-token")))
-
-(re-frame/dispatch [::re-graph/init {
-                                     :ws-url          nil
-                                     :http-url        "http://localhost:8080/graphql"
-                                     :http-parameters {:with-credentials? false}}])
 
 (re-frame/reg-event-db
   ::initialize-db
@@ -81,6 +90,16 @@
   (fn-traced [db [_ pwd]]
              (assoc db :pwd-new-conf pwd)))
 
+(re-frame/reg-event-db
+  ::change-new-title
+  (fn-traced [db [_ title]]
+             (assoc db :new-title title)))
+
+(re-frame/reg-event-db
+  ::change-new-url
+  (fn-traced [db [_ url]]
+             (assoc db :new-url url)))
+
 (re-frame/reg-event-fx
   ::login-result
   (fn [{db :db} [_ response]]
@@ -95,6 +114,7 @@
                                      (assoc :loading? false)
                                      (assoc :login-error? error)
                                      (assoc :username username))
+                :dispatch        [::update-re-graph token]
                 :set-local-store [{:token token :refresh refresh}]}]
       (if (and (nil? error) (not (nil? token)))
         (merge rmap {:dispatch-panel :news-panel})
@@ -119,6 +139,7 @@
                                      (assoc :pwd-new-conf nil)
                                      (assoc :signup-error? error)
                                      (assoc :username username))
+                :dispatch        [::update-re-graph token]
                 :set-local-store [{:token token :refresh refresh}]}]
       (if (and (nil? error) (not (nil? token)))
         (merge rmap {:dispatch-panel :news-panel})
@@ -148,14 +169,34 @@
                   graph/sign
                   {:email    email
                    :password pwd
-                   :name name}
+                   :name     name}
                   [::signup-result]]
        :db       (-> db
                      (assoc :loading? true))})))
 
 (re-frame/reg-event-fx
+  ::submit-result
+  (fn [{db :db} [_ response]]
+    {:db (assoc db :response response)}))
+
+(re-frame/reg-event-fx
+  ::submit-post
+  (fn [{db :db} _]
+    (let [title @(re-frame/subscribe [::subs/new-title])
+          url @(re-frame/subscribe [::subs/new-url])
+          jwt (get-local-storage "token")]
+      {:dispatch [::re-graph/mutate
+                  graph/post
+                  {:description title
+                   :url         url}
+                  [::submit-result]]
+       :db       (assoc db :loading? true)})))
+
+(re-frame/reg-event-fx
   ::logout
   (fn [{db :db} _]
     {:remove-local-store []
-     :db (-> db
-           (assoc :username nil))}))
+     :dispatch           [::update-re-graph nil]
+     :db                 (-> db
+                             (assoc :username nil))}))
+
