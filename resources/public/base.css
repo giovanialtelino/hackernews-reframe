@@ -41,3 +41,6 @@ footer {
   right: 0;
   z-index: 30;
 }
+
+.container-fluid{
+padding-bottom: 3rem;}

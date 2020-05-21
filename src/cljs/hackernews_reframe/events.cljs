@@ -100,6 +100,20 @@
   (fn-traced [db [_ url]]
              (assoc db :new-url url)))
 
+(defn- remove-new-id [news-list id]
+  (loop [new []
+         i 0]
+    (if (< i (count news-list))
+      (if (= (:id (nth news-list i)) id)
+        (recur new (inc i))
+        (recur (conj new (nth news-list i)) (inc i)))
+      new)))
+
+(re-frame/reg-event-db
+  ::remove-view
+  (fn-traced [db [_ id]]
+             (assoc db :news-list (remove-new-id (:news-list db) id))))
+
 (re-frame/reg-event-fx
   ::login-result
   (fn [{db :db} [_ response]]
@@ -219,3 +233,24 @@
                    :skip    skip}
                   [::get-news-result]]})))
 
+(defn- update-votes-news [news-list id votes]
+  (loop [new []
+         i 0]
+    (if (< i (count news-list))
+      (if (= (:id (nth news-list i)) id)
+        (recur (conj new (assoc (nth news-list i) :votes votes)) (inc i))
+        (recur (conj new (nth news-list i)) (inc i)))
+      new)))
+
+(re-frame/reg-event-db
+  ::get-new-vote-count
+  (fn-traced [db [_ id response]]
+             (assoc db :news-list (update-votes-news (:news-list db) id (get-in response [:data :vote] 0)))))
+
+(re-frame/reg-event-fx
+  ::vote
+  (fn [_ [_ id]]
+    {:dispatch [::re-graph/mutate
+                graph/vote
+                {:id id}
+                [::get-new-vote-count id]]}))

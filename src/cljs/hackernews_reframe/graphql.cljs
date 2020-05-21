@@ -81,3 +81,6 @@
     votes  }}"
   )
 
+(def vote
+  "vote($id:String!){
+  vote(id:$id)}")

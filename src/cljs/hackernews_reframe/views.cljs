@@ -9,22 +9,23 @@
 
 ;; news
 ;id description postedBy votes comments createdAt url
-(defn post-row [post-id title posted-by points comments-count]
+(defn post-row [post-id title posted-by points comments-count created-at url]
   [:article.media
    [:figure.media-left
-    [:a.like-dislike [:i.fas.fa-arrow-up]]
-    [:a.like-dislike [:i.fas.fa-arrow-down]]]
+    [:a.like-dislike
+     {:on-click #(re-frame/dispatch [::events/vote post-id])}
+     [:i.fas.fa-arrow-up]]]
    [:div.media-content
     [:div#small-content.content
      [:p
-      [:small " " points " points by "] [:a posted-by]
-      [:br] [:strong title]]]
+      [:small " " points " points by "] [:a posted-by] [:small " created at " created-at]
+      [:br] [:a {:href url} [:strong title]]]]
     [:nav.level.is-mobile
      [:div.level-left
       [:a.level-item
-       [:span [:small "share"]]]
-      [:a.level-item
-       [:span [:small "hide"]]]
+       [:span
+        {:on-click #(re-frame/dispatch [::events/remove-view post-id])}
+        [:small "hide"]]]
       [:a.level-item
        [:span [:small " " comments-count " comments"]]]]]]])
 
@@ -35,18 +36,14 @@
          comments    :comments
          createdat   :createdAt
          id          :id
-         url         :url
-         order       :order} item]
+         url         :url} item]
     (post-row id description postedby votes comments createdat url)))
 
 (defn news-panel []
   (let [news-list @(re-frame/subscribe [::subs/news-list])]
     [:div.container-fluid
      (for [i (range (count news-list))]
-       (extract-news-panel i)
-       )
-     ]
-    ))
+       (extract-news-panel (nth news-list i)))]))
 
 (defn login-panel []
   [:div.container
