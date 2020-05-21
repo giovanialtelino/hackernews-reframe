@@ -77,3 +77,13 @@
   (fn [db _]
     (or (empty? (:new-url db)) (empty? (:new-title db)))))
 
+(re-frame/reg-sub
+  ::news-list
+  (fn [db _]
+    (:news-list db)))
+
+(re-frame/reg-sub
+  ::news-page
+  (fn [db _]
+    (:news-page db)))
+

@@ -183,8 +183,7 @@
   ::submit-post
   (fn [{db :db} _]
     (let [title @(re-frame/subscribe [::subs/new-title])
-          url @(re-frame/subscribe [::subs/new-url])
-          jwt (get-local-storage "token")]
+          url @(re-frame/subscribe [::subs/new-url])]
       {:dispatch [::re-graph/mutate
                   graph/post
                   {:description title
@@ -199,4 +198,24 @@
      :dispatch           [::update-re-graph nil]
      :db                 (-> db
                              (assoc :username nil))}))
+
+(re-frame/reg-event-fx
+  ::get-news-result
+  (fn [{db :db} [_ response]]
+    (let [news (get-in response [:data :feed])]
+      {:db (assoc db :news-list news)})))
+
+(re-frame/reg-event-fx
+  ::get-news
+  (fn [{db :db} _]
+    (let [current-page @(re-frame/subscribe [::subs/news-page])
+          first 30
+          skip (* first current-page)]
+      {:db       (assoc db :loading-news? true)
+       :dispatch [::re-graph/query
+                  graph/feed
+                  {:first   first
+                   :orderby "ASC"
+                   :skip    skip}
+                  [::get-news-result]]})))
 

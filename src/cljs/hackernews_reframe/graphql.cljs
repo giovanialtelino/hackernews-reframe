@@ -33,7 +33,7 @@
 
 (def feed
   "feed($first:Int, $orderBy:String, $skip:Int){
-  feed(first:$first, orderBy:$orderBy, skip:$skip){
+  feed(first:$first, orderby:$orderBy, skip:$skip){
   comments
   createdAt
   description

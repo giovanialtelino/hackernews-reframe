@@ -4,4 +4,5 @@
   {:name "re-frame"
    :active-panel :news-panel
    :email nil
-   :pwd nil})
+   :pwd nil
+   :news-page 0})

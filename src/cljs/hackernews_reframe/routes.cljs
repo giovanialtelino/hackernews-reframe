@@ -23,6 +23,7 @@
   ;; define routes here
   (defroute "/" []
             (re-frame/dispatch [::events/set-active-panel :news-panel])
+            (re-frame/dispatch [::events/get-news])
             )
 
   (defroute "/login" []

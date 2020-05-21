@@ -8,6 +8,7 @@
     ))
 
 ;; news
+;id description postedBy votes comments createdAt url
 (defn post-row [post-id title posted-by points comments-count]
   [:article.media
    [:figure.media-left
@@ -27,12 +28,25 @@
       [:a.level-item
        [:span [:small " " comments-count " comments"]]]]]]])
 
+(defn- extract-news-panel [item]
+  (let [{description :description
+         postedby    :postedBy
+         votes       :votes
+         comments    :comments
+         createdat   :createdAt
+         id          :id
+         url         :url
+         order       :order} item]
+    (post-row id description postedby votes comments createdat url)))
+
 (defn news-panel []
-  [:div.container-fluid
-   [post-row "1" "title of the article whatever or yolo" "giovani" 10 20]
-   [post-row "2" "title of the article whatever or yolo" "giovani" 10 20]
-   [post-row "3" "title of the article whatever or yolo" "giovani" 10 20]
-   [post-row "4" "title of the article whatever or yolo" "giovani" 10 20]])
+  (let [news-list @(re-frame/subscribe [::subs/news-list])]
+    [:div.container-fluid
+     (for [i (range (count news-list))]
+       (extract-news-panel i)
+       )
+     ]
+    ))
 
 (defn login-panel []
   [:div.container
@@ -213,13 +227,6 @@
 
    [:div.columns.is-centered.space-left [:div.column.is-2 [:button.button [:small "Posts"]]] [:div.column.is-2 [:button.button [:small "Comments"]]]]]
   )
-
-;; main
-[:div.columns.space-left
- [:div.column.is-2.column-text
-  [:label.label "About You"]]
- [:div.column.is-6
-  [:textarea.textarea]]]
 
 (defn- panels [panel-name]
   (case panel-name
