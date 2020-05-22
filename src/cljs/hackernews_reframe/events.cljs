@@ -122,12 +122,19 @@
           refresh (:refresh login)
           token (:token login)
           username (get-in login [:user :name] nil)
+          email (get-in login [:user :email] nil)
+          created-at (get-in login [:user :createdat] nil)
+          karma (get-in login [:user :karma] nil)
           rmap {:db              (-> db
+                                     (assoc :resp response)
                                      (assoc :email nil)
                                      (assoc :pwd nil)
                                      (assoc :loading? false)
                                      (assoc :login-error? error)
-                                     (assoc :username username))
+                                     (assoc :username username)
+                                     (assoc :user-page {:email-user      email
+                                                        :created-at-user created-at
+                                                        :karma-user      karma}))
                 :dispatch        [::update-re-graph token]
                 :set-local-store [{:token token :refresh refresh}]}]
       (if (and (nil? error) (not (nil? token)))
@@ -143,6 +150,9 @@
           refresh (:refresh login)
           token (:token login)
           username (get-in login [:user :name] nil)
+          email (get-in login [:user :email] nil)
+          created-at (get-in login [:user :createdat] nil)
+          karma (get-in login [:user :karma] nil)
           rmap {:db              (-> db
                                      (assoc :email nil)
                                      (assoc :pwd nil)
@@ -152,7 +162,10 @@
                                      (assoc :new-usr nil)
                                      (assoc :pwd-new-conf nil)
                                      (assoc :signup-error? error)
-                                     (assoc :username username))
+                                     (assoc :username username)
+                                     (assoc :user-page {:email-user      email
+                                                        :created-at-user created-at
+                                                        :karma-user      karma}))
                 :dispatch        [::update-re-graph token]
                 :set-local-store [{:token token :refresh refresh}]}]
       (if (and (nil? error) (not (nil? token)))
@@ -254,3 +267,27 @@
                 graph/vote
                 {:id id}
                 [::get-new-vote-count id]]}))
+
+(re-frame/reg-event-db
+  ::clean-user-info
+  (fn-traced [db _]
+             (assoc db :generic-user nil)))
+
+(re-frame/reg-event-db
+  ::result-user-info
+  (fn-traced [db [_ response]]
+             (let [user (get-in response [:data :userdescription])
+                   username (:username user)
+                   karma (:karma user)
+                   createdat (:createdat user)]
+               (assoc db :generic-user {:username   username
+                                        :karma      karma
+                                        :created-at createdat}))))
+
+(re-frame/reg-event-fx
+  ::get-user-info-by-name
+  (fn [_ [_ name]]
+    {:dispatch [::re-graph/query
+                graph/user-description
+                {:name name}
+                [::result-user-info]]}))

@@ -87,3 +87,32 @@
   (fn [db _]
     (:news-page db)))
 
+(re-frame/reg-sub
+  ::email-user
+  (fn [db _]
+    (get-in db [:user-page :email-user])))
+
+(re-frame/reg-sub
+  ::karma-user
+  (fn [db _]
+    (get-in db [:user-page :karma-user])))
+
+(re-frame/reg-sub
+  ::created-at-user
+  (fn [db _]
+    (get-in db [:user-page :created-at-user])))
+
+(re-frame/reg-sub
+  ::created-at-generic
+  (fn [db _]
+    (get-in db [:generic-user :created-at])))
+
+(re-frame/reg-sub
+  ::karma-generic
+  (fn [db _]
+    (get-in db [:generic-user :karma])))
+
+(re-frame/reg-sub
+  ::username-generic
+  (fn [db _]
+    (get-in db [:generic-user :username])))

@@ -47,5 +47,10 @@
   (defroute "/user" []
             (re-frame/dispatch [::events/set-active-panel :user-panel]))
 
+  (defroute hn-user "/hn-user/:name" [name]
+            (re-frame/dispatch-sync [::events/clean-user-info])
+            (re-frame/dispatch [::events/get-user-info-by-name name])
+            (re-frame/dispatch [::events/set-active-panel :generic-user-panel]))
+
   ;; --------------------
   (hook-browser-navigation!))

@@ -19,6 +19,7 @@
     <orderEntry type="library" name="Leiningen: binaryage/devtools:1.0.0" level="project" />
     <orderEntry type="library" name="Leiningen: cheshire:5.7.1" level="project" />
     <orderEntry type="library" name="Leiningen: cider/piggieback:0.4.2" level="project" />
+    <orderEntry type="library" name="Leiningen: clj-commons/secretary:1.2.4" level="project" />
     <orderEntry type="library" name="Leiningen: clj-http:3.9.1" level="project" />
     <orderEntry type="library" name="Leiningen: clj-tuple:0.2.2" level="project" />
     <orderEntry type="library" name="Leiningen: cljs-ajax:0.8.0" level="project" />
@@ -129,7 +130,6 @@
     <orderEntry type="library" name="Leiningen: riddley:0.1.12" level="project" />
     <orderEntry type="library" name="Leiningen: ring/ring-codec:1.1.2" level="project" />
     <orderEntry type="library" name="Leiningen: ring/ring-core:1.8.0" level="project" />
-    <orderEntry type="library" name="Leiningen: secretary:1.2.3" level="project" />
     <orderEntry type="library" name="Leiningen: slingshot:0.12.2" level="project" />
     <orderEntry type="library" name="Leiningen: spec-coerce:1.0.0-alpha6" level="project" />
     <orderEntry type="library" name="Leiningen: stylefruits/gniazdo:1.1.1" level="project" />
