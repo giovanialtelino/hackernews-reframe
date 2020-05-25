@@ -8,9 +8,20 @@
     [hackernews-reframe.routes :as routes]
     ))
 
+(defn- comment-row [comment-id posted-by comment date votes]
+
+  )
+
+(defn comment-panel []
+  (let [main-father @(re-frame/subscribe [::subs/comment-father])
+        comment-list @(re-frame/subscribe [::subs/comments-list])]
+
+
+    ))
+
 ;; news
 ;id description postedBy votes comments createdAt url
-(defn post-row [post-id title posted-by points comments-count created-at url]
+(defn- post-row [post-id title posted-by points comments-count created-at url]
   (let [logged? (nil? @(re-frame/subscribe [::subs/username]))
         vote-action (if logged?
                       "/"
@@ -24,7 +35,7 @@
      [:div.media-content
       [:div#small-content.content
        [:p
-        [:small " " points " points by "] [:a {:href (routes/hn-user {:name posted-by} ) } posted-by] [:small " created at " created-at]
+        [:small " " points " points by "] [:a {:href (routes/hn-user {:name posted-by})} posted-by] [:small " created at " created-at]
         [:br] [:a {:href url} [:strong title]]]]
       [:nav.level.is-mobile
        [:div.level-left
@@ -33,7 +44,7 @@
           {:on-click #(re-frame/dispatch [::events/remove-view post-id])}
           [:small "hide"]]]
         [:a.level-item
-         [:span [:small " " comments-count " comments"]]]]]]]))
+         [:span [:a {:href (routes/hn-comment {:father post-id})} [:small " " comments-count " comments"]]]]]]]]))
 
 (defn- extract-news-panel [item]
   (let [{description :description
@@ -199,7 +210,7 @@
      (if-not (nil? login-error)
        [:div.columns.is-centered.space-left [:span [:strong login-error]]]))])
 
-(defn comment-panel [])
+
 
 (defn generic-user-panel []
   [:div.container-fluid

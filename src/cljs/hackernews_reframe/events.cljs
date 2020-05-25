@@ -291,3 +291,26 @@
                 graph/user-description
                 {:name name}
                 [::result-user-info]]}))
+
+(re-frame/reg-event-fx
+  ::update-comment-main-father
+  (fn [{db :db} [_ father]]
+    (println father)
+    {:db (assoc db :main-father father)}))
+
+(re-frame/reg-event-db
+  ::result-get-comments-father
+  (fn-traced [db [_ response]]
+             (let [comments (get-in response [:data :comments])]
+               (assoc db :comment-list comments))))
+
+(re-frame/reg-event-fx
+  ::get-father-comments
+  (fn [_ [_ ok father]]
+    (println ok)
+    (println father)
+    {:dispatch [::re-graph/query
+                graph/get-comments
+                {:father father}
+                [::result-get-comments-father]]}))
+

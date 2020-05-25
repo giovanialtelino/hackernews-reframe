@@ -100,3 +100,15 @@
                                     createdat
                                     }}"
   )
+
+(def get-comments
+  "
+  comments($father:String!){
+  comments(father:$father){
+    id
+    father
+    createdAt
+    text
+    votes
+    postedBy
+  }}")

@@ -41,7 +41,9 @@
   (defroute "/past" []
             (re-frame/dispatch [::events/set-active-panel :past-panel]))
 
-  (defroute "/comment" []
+  (defroute hn-comment "/comment/:father" [main-father]
+            (re-frame/dispatch-sync [::events/update-comment-main-father main-father])
+            (re-frame/dispatch [::events/get-father-comments main-father])
             (re-frame/dispatch [::events/set-active-panel :comment-panel]))
 
   (defroute "/user" []

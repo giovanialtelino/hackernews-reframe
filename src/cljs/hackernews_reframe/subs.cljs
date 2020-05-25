@@ -116,3 +116,13 @@
   ::username-generic
   (fn [db _]
     (get-in db [:generic-user :username])))
+
+(re-frame/reg-sub
+  ::comment-father
+  (fn [db _]
+    (get-in db [:main-father])))
+
+(re-frame/reg-sub
+  ::comments-list
+  (fn [db _]
+    (get-in db [:comment-list])))
