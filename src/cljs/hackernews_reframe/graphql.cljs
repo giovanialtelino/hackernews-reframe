@@ -8,7 +8,8 @@
     ) {token
        error
        refresh
-       user {name
+       user {
+       name
        email
        createdat
        karma}}}")
@@ -19,7 +20,8 @@
      token
      refresh
      error
-     user {name
+     user {
+     name
      email
      createdat
      karma}}}")
@@ -87,13 +89,24 @@
     votes  }}"
   )
 
+(def refresh
+  "refresh {refresh
+  {
+   error
+   refresh
+   token
+   user{
+   name
+   email
+   createdat
+   karma}}}")
+
 (def vote
   "vote($id:String!){
   vote(id:$id)}")
 
 (def user-description
-  "
-  userdescription($name:String!)
+  "  userdescription($name:String!)
   {userdescription (name:$name) {
                                     username
                                     karma

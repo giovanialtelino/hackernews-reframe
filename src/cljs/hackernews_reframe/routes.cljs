@@ -22,34 +22,50 @@
   ;; --------------------
   ;; define routes here
   (defroute "/" []
+            (re-frame/dispatch-sync [::events/start-headers])
+            (re-frame/dispatch [::events/refresh])
             (re-frame/dispatch [::events/set-active-panel :news-panel])
             (re-frame/dispatch [::events/get-news])
             )
 
   (defroute "/login" []
+            (re-frame/dispatch-sync [::events/start-headers])
+            (re-frame/dispatch [::events/refresh])
             (re-frame/dispatch [::events/set-active-panel :login-panel])
             )
 
   (defroute "/sign" []
+            (re-frame/dispatch-sync [::events/start-headers])
+            (re-frame/dispatch [::events/refresh])
             (re-frame/dispatch [::events/set-active-panel :sign-panel])
             )
 
   (defroute "/submit" []
+            (re-frame/dispatch-sync [::events/start-headers])
+            (re-frame/dispatch [::events/refresh])
             (re-frame/dispatch [::events/set-active-panel :post-panel])
             )
 
   (defroute "/past" []
+            (re-frame/dispatch-sync [::events/start-headers])
+            (re-frame/dispatch [::events/refresh])
             (re-frame/dispatch [::events/set-active-panel :past-panel]))
 
-  (defroute hn-comment "/comment/:father" [main-father]
-            (re-frame/dispatch-sync [::events/update-comment-main-father main-father])
-            (re-frame/dispatch [::events/get-father-comments main-father])
+  (defroute hn-comment "/comments/:father" [father]
+            (re-frame/dispatch-sync [::events/start-headers])
+            (re-frame/dispatch [::events/refresh])
+            (re-frame/dispatch-sync [::events/clean-comments])
+            (re-frame/dispatch [::events/get-father-comments father])
             (re-frame/dispatch [::events/set-active-panel :comment-panel]))
 
   (defroute "/user" []
+            (re-frame/dispatch-sync [::events/start-headers])
+            (re-frame/dispatch [::events/refresh])
             (re-frame/dispatch [::events/set-active-panel :user-panel]))
 
   (defroute hn-user "/hn-user/:name" [name]
+            (re-frame/dispatch-sync [::events/start-headers])
+            (re-frame/dispatch [::events/refresh])
             (re-frame/dispatch-sync [::events/clean-user-info])
             (re-frame/dispatch [::events/get-user-info-by-name name])
             (re-frame/dispatch [::events/set-active-panel :generic-user-panel]))

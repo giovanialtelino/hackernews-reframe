@@ -22,10 +22,18 @@
 
 (re-frame/dispatch [::re-graph/init re-graph-init])
 
-(re-frame/reg-event-db
+(re-frame/reg-event-fx
   ::update-re-graph
-  (fn-traced [db [_ token]]
-             (assoc-in db [:re-graph :re-graph.internals/default :http-parameters :headers] {"Authorization" token})))
+  (fn [{db :db} [_ [token refresh]]]
+    {:db (-> db
+             (assoc-in [:re-graph :re-graph.internals/default :http-parameters :headers] {"Authorization" token "Refresh" refresh}))}))
+
+(re-frame/reg-event-fx
+  ::start-headers
+  (fn [_ _]
+    (let [token (get-local-storage "token")
+          refresh (get-local-storage "refresh-token")]
+      {:dispatch [::update-re-graph [token refresh]]})))
 
 (re-frame/reg-fx
   :set-local-store
@@ -115,6 +123,29 @@
              (assoc db :news-list (remove-new-id (:news-list db) id))))
 
 (re-frame/reg-event-fx
+  ::refresh-result
+  (fn [{db :db} [_ response]]
+    (let [result (get-in response [:data :refresh] nil)
+          error (:error result)
+          refresh (:refresh result)
+          token (:token result)
+          username (get-in result [:user :name] nil)
+          email (get-in result [:user :email] nil)
+          created-at (get-in result [:user :createdat] nil)
+          karma (get-in result [:user :karma] nil)]
+      {:db              (-> db
+                            (assoc :email nil)
+                            (assoc :pwd nil)
+                            (assoc :loading? false)
+                            (assoc :login-error? error)
+                            (assoc :username username)
+                            (assoc :user-page {:email-user      email
+                                               :created-at-user created-at
+                                               :karma-user      karma}))
+       :dispatch        [::update-re-graph [token refresh]]
+       :set-local-store [{:token token :refresh refresh}]})))
+
+(re-frame/reg-event-fx
   ::login-result
   (fn [{db :db} [_ response]]
     (let [login (get-in response [:data :login] nil)
@@ -135,7 +166,7 @@
                                      (assoc :user-page {:email-user      email
                                                         :created-at-user created-at
                                                         :karma-user      karma}))
-                :dispatch        [::update-re-graph token]
+                :dispatch        [::update-re-graph [token refresh]]
                 :set-local-store [{:token token :refresh refresh}]}]
       (if (and (nil? error) (not (nil? token)))
         (merge rmap {:dispatch-panel :news-panel})
@@ -166,7 +197,7 @@
                                      (assoc :user-page {:email-user      email
                                                         :created-at-user created-at
                                                         :karma-user      karma}))
-                :dispatch        [::update-re-graph token]
+                :dispatch        [::update-re-graph [token refresh]]
                 :set-local-store [{:token token :refresh refresh}]}]
       (if (and (nil? error) (not (nil? token)))
         (merge rmap {:dispatch-panel :news-panel})
@@ -185,6 +216,19 @@
                   [::login-result]]
        :db       (-> db
                      (assoc :loading? true))})))
+
+(re-frame/reg-event-fx
+  ::refresh
+  (fn [{db :db} _]
+    (let [not-logged @(re-frame/subscribe [::subs/username])
+          refresh-token (get-local-storage "refresh-token")]
+      (if (and (not (nil? refresh-token)) (nil? not-logged))
+        {:dispatch [::re-graph/mutate
+                    graph/refresh
+                    {}
+                    [::refresh-result]]
+         :db       (-> db
+                       (assoc :loading? true))}))))
 
 (re-frame/reg-event-fx
   ::sign
@@ -294,23 +338,24 @@
 
 (re-frame/reg-event-fx
   ::update-comment-main-father
-  (fn [{db :db} [_ father]]
-    (println father)
+  (fn [{db :db} [_ father extra]]
     {:db (assoc db :main-father father)}))
 
 (re-frame/reg-event-db
   ::result-get-comments-father
-  (fn-traced [db [_ response]]
+  (fn-traced [db [_ father response]]
              (let [comments (get-in response [:data :comments])]
-               (assoc db :comment-list comments))))
+               (assoc db :comment-list comments :main-father father))))
 
 (re-frame/reg-event-fx
   ::get-father-comments
-  (fn [_ [_ ok father]]
-    (println ok)
-    (println father)
+  (fn [_ [_ father]]
     {:dispatch [::re-graph/query
                 graph/get-comments
                 {:father father}
-                [::result-get-comments-father]]}))
+                [::result-get-comments-father father]]}))
 
+(re-frame/reg-event-db
+  ::clean-comments
+  (fn [db _]
+    (assoc db :comment-list nil)))

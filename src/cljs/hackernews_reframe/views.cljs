@@ -4,23 +4,38 @@
     [re-frame.core :as re-frame]
     [hackernews-reframe.subs :as subs]
     [hackernews-reframe.events :as events]
-    [clojure.string :as str]
     [hackernews-reframe.routes :as routes]
     ))
 
-(defn- comment-row [comment-id posted-by comment date votes]
+(defn- comment-row [comment-id posted-by comment date votes lvl]
+  [:article.media {:style {:padding-left (str (* lvl 0.2) "rem")}}
+   [:figure.media-left
+    [:a.like-dislike
+     {:on-click ""}
+     [:i.fas.fa-arrow-up]]]
+   [:div.media-content
+    [:div#small-content.content
+     [:p
+      [:small "posted by "] [:a {:href (routes/hn-user {:name posted-by})} posted-by] [:small " created at " date] [:small " - votes " votes]]]
+    [:p [:span comment]]]])
 
-  )
+(defn- list-update-in [l i x]
+  (let [newlist (take i l)
+        newlist (concat newlist (list x))
+        newlist (concat newlist (drop (+ 1 i) l))]
+    newlist))
 
 (defn comment-panel []
-  (let [main-father @(re-frame/subscribe [::subs/comment-father])
-        comment-list @(re-frame/subscribe [::subs/comments-list])]
+  (let [comment-list @(re-frame/subscribe [::subs/comments-list])]
+    [:div.container-fluid
+     (for [i (range (count comment-list))]
+       (comment-row (:id (nth comment-list i))
+                    (:postedBy (nth comment-list i))
+                    (:text (nth comment-list i))
+                    (:createdAt (nth comment-list i))
+                    (:votes (nth comment-list i))
+                    (:lvl (nth comment-list i))))]))
 
-
-    ))
-
-;; news
-;id description postedBy votes comments createdAt url
 (defn- post-row [post-id title posted-by points comments-count created-at url]
   (let [logged? (nil? @(re-frame/subscribe [::subs/username]))
         vote-action (if logged?
@@ -323,3 +338,4 @@
     [:div.content.has-text-centered
      [:p "This is a Hacker News homage with Lacinia Pedestal and Re-Frame."]
      [:p "For info check the Github Project, " [:a {:target "_blank" :href "https://github.com/giovanialtelino/hackernews-reframe"} "front-end"] " and " [:a {:target "_blank" :href "https://github.com/giovanialtelino/hackernews-lacinia-datomic"} "back-end"] "."]]]])
+
