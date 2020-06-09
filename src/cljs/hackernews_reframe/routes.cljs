@@ -22,6 +22,7 @@
   ;; --------------------
   ;; define routes here
   (defroute "/" []
+            (re-frame/dispatch-sync [::events/clean-posts])
             (re-frame/dispatch-sync [::events/start-headers])
             (re-frame/dispatch [::events/refresh])
             (re-frame/dispatch [::events/set-active-panel :news-panel])
@@ -57,6 +58,20 @@
             (re-frame/dispatch-sync [::events/clean-comments])
             (re-frame/dispatch [::events/get-father-comments father])
             (re-frame/dispatch [::events/set-active-panel :comment-panel]))
+
+  (defroute user-comments "/user-comments/:user" [user]
+            (re-frame/dispatch-sync [::events/start-headers])
+            (re-frame/dispatch [::events/refresh])
+            (re-frame/dispatch-sync [::events/clean-comments])
+            (re-frame/dispatch [::events/get-user-comments user])
+            (re-frame/dispatch [::events/set-active-panel :comment-panel]))
+
+  (defroute user-posts "/user-posts/:user" [user]
+            (re-frame/dispatch-sync [::events/start-headers])
+            (re-frame/dispatch [::events/refresh])
+            (re-frame/dispatch-sync [::events/clean-posts])
+            (re-frame/dispatch [::events/get-user-posts user])
+            (re-frame/dispatch [::events/set-active-panel :news-panel]))
 
   (defroute "/user" []
             (re-frame/dispatch-sync [::events/start-headers])

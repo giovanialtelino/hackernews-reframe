@@ -304,6 +304,11 @@
   (fn-traced [db [_ id response]]
              (assoc db :news-list (update-votes-news (:news-list db) id (get-in response [:data :vote] 0)))))
 
+(re-frame/reg-event-db
+  ::get-new-comment-vote-count
+  (fn-traced [db [_ id response]]
+             (assoc db :comment-list (update-votes-news (:comment-list db) id (get-in response [:data :comment_vote] 0)))))
+
 (re-frame/reg-event-fx
   ::vote
   (fn [_ [_ id]]
@@ -311,6 +316,14 @@
                 graph/vote
                 {:id id}
                 [::get-new-vote-count id]]}))
+
+(re-frame/reg-event-fx
+  ::vote-comment
+  (fn [_ [_ id]]
+    {:dispatch [::re-graph/mutate
+                graph/vote-comment
+                {:id id}
+                [::get-new-comment-vote-count id]]}))
 
 (re-frame/reg-event-db
   ::clean-user-info
@@ -359,3 +372,37 @@
   ::clean-comments
   (fn [db _]
     (assoc db :comment-list nil)))
+
+(re-frame/reg-event-db
+  ::clean-posts
+  (fn [db _]
+    (assoc db :news-list nil)))
+
+(re-frame/reg-event-db
+  ::result-get-user-comments
+  (fn-traced [db [_ response]]
+             (let [comments (get-in response [:data :user_comments])]
+               (assoc db :comment-list comments :main-father nil))))
+
+(re-frame/reg-event-fx
+  ::get-user-comments
+  (fn [_ [_ user]]
+    {:dispatch [::re-graph/query
+                graph/get-user-comments
+                {:user user}
+                [::result-get-user-comments]]}))
+
+(re-frame/reg-event-fx
+  ::result-get-user-posts
+  (fn [{db :db} [_ response]]
+    (let [news (get-in response [:data :user_posts])]
+      {:db (assoc db :news-list news)})))
+
+(re-frame/reg-event-fx
+  ::get-user-posts
+  (fn [_ [_ user]]
+    {:dispatch [::re-graph/query
+                graph/get-user-posts
+                {:user user}
+                [::result-get-user-posts]]}))
+

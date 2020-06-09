@@ -8,16 +8,16 @@
     ))
 
 (defn- comment-row [comment-id posted-by comment date votes lvl]
-  [:article.media {:style {:padding-left (str (* lvl 0.2) "rem")}}
-   [:figure.media-left
-    [:a.like-dislike
-     {:on-click ""}
-     [:i.fas.fa-arrow-up]]]
-   [:div.media-content
-    [:div#small-content.content
-     [:p
-      [:small "posted by "] [:a {:href (routes/hn-user {:name posted-by})} posted-by] [:small " created at " date] [:small " - votes " votes]]]
-    [:p [:span comment]]]])
+  ^{:key comment-id} [:article.media {:style {:padding-left (str (* lvl 0.2) "rem")}}
+                      [:figure.media-left
+                       [:a.like-dislike
+                        {:on-click #(re-frame/dispatch [::events/vote-comment comment-id])}
+                        [:i.fas.fa-arrow-up]]]
+                      [:div.media-content
+                       [:div#small-content.content
+                        [:p
+                         [:small "posted by "] [:a {:href (routes/hn-user {:name posted-by})} posted-by] [:small " created at " date] [:small " - votes " votes]]]
+                       [:p [:span comment]]]])
 
 (defn- list-update-in [l i x]
   (let [newlist (take i l)
@@ -37,29 +37,20 @@
                     (:lvl (nth comment-list i))))]))
 
 (defn- post-row [post-id title posted-by points comments-count created-at url]
-  (let [logged? (nil? @(re-frame/subscribe [::subs/username]))
-        vote-action (if logged?
-                      "/"
-                      #(re-frame/dispatch [::events/vote post-id])
-                      )]
-    [:article.media
-     [:figure.media-left
-      [:a.like-dislike
-       {:on-click vote-action}
-       [:i.fas.fa-arrow-up]]]
-     [:div.media-content
-      [:div#small-content.content
-       [:p
-        [:small " " points " points by "] [:a {:href (routes/hn-user {:name posted-by})} posted-by] [:small " created at " created-at]
-        [:br] [:a {:href url} [:strong title]]]]
-      [:nav.level.is-mobile
-       [:div.level-left
-        [:a.level-item
-         [:span
-          {:on-click #(re-frame/dispatch [::events/remove-view post-id])}
-          [:small "hide"]]]
-        [:a.level-item
-         [:span [:a {:href (routes/hn-comment {:father post-id})} [:small " " comments-count " comments"]]]]]]]]))
+  ^{:key post-id} [:article.media
+                   [:figure.media-left
+                    [:a.like-dislike
+                     {:on-click #(re-frame/dispatch [::events/vote post-id])}
+                     [:i.fas.fa-arrow-up]]]
+                   [:div.media-content
+                    [:div#small-content.content
+                     [:p
+                      [:small " " points " points by "] [:a {:href (routes/hn-user {:name posted-by})} posted-by] [:small " created at " created-at]
+                      [:br] [:a {:href url} [:strong title]]]]
+                    [:nav.level.is-mobile
+                     [:div.level-left
+                      [:a.level-item {:on-click #(re-frame/dispatch [::events/remove-view post-id])} [:small "hide"]]
+                      [:a.level-item {:href (routes/hn-comment {:father post-id})} [:small " " comments-count " comments"]]]]]])
 
 (defn- extract-news-panel [item]
   (let [{description :description
@@ -137,7 +128,6 @@
           {:on-click #(re-frame/dispatch [::events/submit-post])}
           "Submit"]))]]])
 
-;go to date or search by keyword, show only 30 itens, but allow it to go further
 (defn past-panel []
   [:div.container-fluid
    [:div.columns.is-centered.space-left
@@ -225,71 +215,99 @@
      (if-not (nil? login-error)
        [:div.columns.is-centered.space-left [:span [:strong login-error]]]))])
 
-
+(defn- avoid-null [x]
+  (if (nil? x)
+    ""
+    x))
 
 (defn generic-user-panel []
-  [:div.container-fluid
-   [:div.columns.space-left
-    [:div.column.is-2.column-text
-     [:label.label "Username"]]
-    [:div.column.is-3.column-text
-     [:input.input {:type     "text"
-                    :readOnly true
-                    :value    @(re-frame/subscribe [::subs/username-generic])}]]]
+  (let [username (avoid-null @(re-frame/subscribe [::subs/username-generic]))
+        karma (avoid-null @(re-frame/subscribe [::subs/karma-generic]))
+        created (avoid-null @(re-frame/subscribe [::subs/created-at-generic]))]
+    [:div.container-fluid
+     [:div.columns.space-left
+      [:div.column.is-2.column-text
+       [:label.label "Username"]]
+      [:div.column.is-3.column-text
+       [:input.input {:type     "text"
+                      :readOnly true
+                      :value    username}]]]
 
-   [:div.columns.space-left
-    [:div.column.is-2.column-text
-     [:label.label "Created At"]]
-    [:div.column.is-2.column-text
-     [:input.input {:type     "text"
-                    :readOnly true
-                    :value    @(re-frame/subscribe [::subs/created-at-generic])}]]]
+     [:div.columns.space-left
+      [:div.column.is-2.column-text
+       [:label.label "Created At"]]
+      [:div.column.is-2.column-text
+       [:input.input {:type     "text"
+                      :readOnly true
+                      :value    created}]]]
 
-   [:div.columns.space-left
-    [:div.column.is-2.column-text
-     [:label.label "Karma"]]
-    [:div.column.is-2.column-text
-     [:input.input {:type     "text"
-                    :readOnly true
-                    :value    @(re-frame/subscribe [::subs/karma-generic])}]]]
+     [:div.columns.space-left
+      [:div.column.is-2.column-text
+       [:label.label "Karma"]]
+      [:div.column.is-2.column-text
+       [:input.input {:type     "text"
+                      :readOnly true
+                      :value    karma}]]]
 
-   [:div.columns.is-centered.space-left [:div.column.is-2 [:button.button [:small "Posts"]]] [:div.column.is-2 [:button.button [:small "Comments"]]]]])
+     [:div.columns.is-centered.space-left
+      [:div.column.is-2
+       [:a {:href (routes/user-posts {:user username})}
+        [:button.button
+         [:small "Posts"]]]]
+      [:div.column.is-2
+       [:a
+        {:href (routes/user-comments {:user username})}
+        [:button.button
+         [:small "Comments"]]]]]]))
 
 (defn user-panel []
-  [:div.container-fluid
-   [:div.columns.space-left
-    [:div.column.is-2.column-text
-     [:label.label "Username"]]
-    [:div.column.is-3.column-text
-     [:input.input {:type     "text"
-                    :readOnly true
-                    :value    @(re-frame/subscribe [::subs/username])}]]]
+  (let [username (avoid-null @(re-frame/subscribe [::subs/username]))
+        email-user (avoid-null @(re-frame/subscribe [::subs/email-user]))
+        karma (avoid-null @(re-frame/subscribe [::subs/karma-user]))
+        created (avoid-null @(re-frame/subscribe [::subs/created-at-user]))]
+    [:div.container-fluid
+     [:div.columns.space-left
+      [:div.column.is-2.column-text
+       [:label.label "Username"]]
+      [:div.column.is-3.column-text
+       [:input.input {:type     "text"
+                      :readOnly true
+                      :value    username}]]]
 
-   [:div.columns.space-left
-    [:div.column.is-2.column-text
-     [:label.label "E-Mail"]]
-    [:div.column.is-3.column-text
-     [:input.input {:type     "text"
-                    :readOnly true
-                    :value    @(re-frame/subscribe [::subs/email-user])}]]]
+     [:div.columns.space-left
+      [:div.column.is-2.column-text
+       [:label.label "E-Mail"]]
+      [:div.column.is-3.column-text
+       [:input.input {:type     "text"
+                      :readOnly true
+                      :value    email-user}]]]
 
-   [:div.columns.space-left
-    [:div.column.is-2.column-text
-     [:label.label "Created At"]]
-    [:div.column.is-2.column-text
-     [:input.input {:type     "text"
-                    :readOnly true
-                    :value    @(re-frame/subscribe [::subs/created-at-user])}]]]
+     [:div.columns.space-left
+      [:div.column.is-2.column-text
+       [:label.label "Created At"]]
+      [:div.column.is-2.column-text
+       [:input.input {:type     "text"
+                      :readOnly true
+                      :value    created}]]]
 
-   [:div.columns.space-left
-    [:div.column.is-2.column-text
-     [:label.label "Karma"]]
-    [:div.column.is-2.column-text
-     [:input.input {:type     "text"
-                    :readOnly true
-                    :value    @(re-frame/subscribe [::subs/karma-user])}]]]
+     [:div.columns.space-left
+      [:div.column.is-2.column-text
+       [:label.label "Karma"]]
+      [:div.column.is-2.column-text
+       [:input.input {:type     "text"
+                      :readOnly true
+                      :value    karma}]]]
 
-   [:div.columns.is-centered.space-left [:div.column.is-2 [:button.button [:small "Posts"]]] [:div.column.is-2 [:button.button [:small "Comments"]]]]])
+     [:div.columns.is-centered.space-left
+      [:div.column.is-2
+       [:a {:href (routes/user-posts {:user username})}
+        [:button.button
+         [:small "Posts"]]]]
+      [:div.column.is-2
+       [:a
+        {:href (routes/user-comments {:user username})}
+        [:button.button
+         [:small "Comments"]]]]]]))
 
 (defn- panels [panel-name]
   (case panel-name
@@ -319,7 +337,6 @@
     [:div#navbarBasicExample.navbar-menu
      [:div.navbar-start
       [:a.navbar-item {:href "#/"} "News"]
-      ;[:a.navbar-item {:href "#/past"} "Past"]
       [:a.navbar-item {:href "#/submit"} "Submit"]]
      [:div.navbar-end
       [:div.navbar-item

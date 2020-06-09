@@ -53,6 +53,20 @@
   votes
   }}")
 
+(def get-user-posts
+  "user_posts($user:String!){
+  user_posts(user:$user){
+  comments
+  createdAt
+  description
+  error
+  id
+  order
+  postedBy
+  url
+  votes
+  }}")
+
 (def get-link
   "link($id:String!){
   link(id:$id){
@@ -105,6 +119,10 @@
   "vote($id:String!){
   vote(id:$id)}")
 
+(def vote-comment
+  "comment_vote($id:String!){
+  comment_vote(id:$id)}")
+
 (def user-description
   "  userdescription($name:String!)
   {userdescription (name:$name) {
@@ -118,6 +136,18 @@
   "
   comments($father:String!){
   comments(father:$father){
+    id
+    father
+    createdAt
+    text
+    votes
+    postedBy
+  }}")
+
+(def get-user-comments
+  "
+  user_comments($user:String!){
+  user_comments(user:$user){
     id
     father
     createdAt
