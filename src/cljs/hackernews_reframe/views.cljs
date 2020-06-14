@@ -7,34 +7,63 @@
     [hackernews-reframe.routes :as routes]
     ))
 
+(defn- main-link [main]
+  (let [{description :description
+         postedBy    :postedBy
+         votes       :votes
+         comments    :comments
+         createdAt   :createdAt
+         id          :id
+         url         :url
+         order       :order
+         error       :error} main]
+    ^{:key id} [:article.media
+                [:figure.media-left
+                 [:a.like-dislike
+                  {:on-click #(re-frame/dispatch [::events/vote id])}
+                  [:i.fas.fa-arrow-up]]]
+                [:div.media-content
+                 [:div#small-content.content
+                  [:p [:a {:href url} [:strong description]]]]
+                 [:nav.level.is-mobile
+                  [:div.content
+                   [:small " " votes " points by "] [:small [:a {:href (routes/hn-user {:name postedBy})} postedBy]] [:small " created at " createdAt]
+                   [:a {:href (routes/hn-comment {:father id})} [:small " " comments " comments"]]
+                   [:div.control
+                    [:textarea.textarea.is-info {:rows      3
+                                                 :value     @(re-frame/subscribe [::subs/new-comment])
+                                                 :on-change #(re-frame/dispatch [::events/new-comment id (-> % .-target .-value)])}]
+                    [:button.button.button-spacer {:on-click #(re-frame/dispatch [::events/post-comment "link"])} "Post comment"]]]]]]))
+
 (defn- comment-row [comment-id posted-by comment date votes lvl]
-  ^{:key comment-id} [:article.media {:style {:padding-left (str (* lvl 0.2) "rem")}}
-                      [:figure.media-left
-                       [:a.like-dislike
-                        {:on-click #(re-frame/dispatch [::events/vote-comment comment-id])}
-                        [:i.fas.fa-arrow-up]]]
-                      [:div.media-content
-                       [:div#small-content.content
-                        [:p
-                         [:small "posted by "] [:a {:href (routes/hn-user {:name posted-by})} posted-by] [:small " created at " date] [:small " - votes " votes]]]
-                       [:p [:span comment]]]])
+  (let [username @(re-frame/subscribe [::subs/username])
+        delete? (if (= posted-by username)
+                  [:small " - " [:a {:on-click #(re-frame/dispatch [::events/delete-comment comment-id])} "delete"]]
+                  "")
+        edit? (if (= posted-by username)
+                [:small " - " [:a "edit"]]
+                "")]
+    ^{:key comment-id} [:article.media {:style {:padding-left (str (* lvl 0.2) "rem")}}
+                        [:figure.media-left
+                         [:a.like-dislike
+                          {:on-click #(re-frame/dispatch [::events/vote-comment comment-id])}
+                          [:i.fas.fa-arrow-up]]]
+                        [:div.media-content
+                         [:div#small-content.content
+                          [:p [:small "posted by "] [:a {:href (routes/hn-user {:name posted-by})} posted-by]
+                           [:small " created at " date]
+                           [:small " - votes " votes]
+                           delete?
+                           edit?
+                           ]]
+                         [:p [:span comment]]
+                         [:span [:a {:href (routes/reply-comment {:comment comment-id})} [:small "reply"]]]]]))
 
 (defn- list-update-in [l i x]
   (let [newlist (take i l)
         newlist (concat newlist (list x))
         newlist (concat newlist (drop (+ 1 i) l))]
     newlist))
-
-(defn comment-panel []
-  (let [comment-list @(re-frame/subscribe [::subs/comments-list])]
-    [:div.container-fluid
-     (for [i (range (count comment-list))]
-       (comment-row (:id (nth comment-list i))
-                    (:postedBy (nth comment-list i))
-                    (:text (nth comment-list i))
-                    (:createdAt (nth comment-list i))
-                    (:votes (nth comment-list i))
-                    (:lvl (nth comment-list i))))]))
 
 (defn- post-row [post-id title posted-by points comments-count created-at url]
   ^{:key post-id} [:article.media
@@ -51,6 +80,20 @@
                      [:div.level-left
                       [:a.level-item {:on-click #(re-frame/dispatch [::events/remove-view post-id])} [:small "hide"]]
                       [:a.level-item {:href (routes/hn-comment {:father post-id})} [:small " " comments-count " comments"]]]]]])
+
+(defn comment-panel []
+  (let [comment-list @(re-frame/subscribe [::subs/comments-list])
+        main @(re-frame/subscribe [::subs/comment-father])]
+    [:div.container-fluid
+     (if-not (nil? main) (main-link main))
+     (for [i (range (count comment-list))]
+       (comment-row (:id (nth comment-list i))
+                    (:postedBy (nth comment-list i))
+                    (:text (nth comment-list i))
+                    (:createdAt (nth comment-list i))
+                    (:votes (nth comment-list i))
+                    (:lvl (nth comment-list i))))]))
+
 
 (defn- extract-news-panel [item]
   (let [{description :description

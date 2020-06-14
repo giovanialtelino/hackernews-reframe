@@ -42,5 +42,9 @@ footer {
   z-index: 30;
 }
 
+.button-spacer {
+margin-top:5px;
+margin-bottom:5px;}
+
 .container-fluid{
 padding-bottom: 3rem;}

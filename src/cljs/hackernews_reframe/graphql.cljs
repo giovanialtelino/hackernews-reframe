@@ -79,15 +79,7 @@
    postedBy
    url
    votes
-   commentList{
-    child
-    father_id
-    father_name
-    id
-    postedBy
-    postedSince
-    text
-    votes }}")
+  }}")
 
 (def post
   "post($description:String!, $url:String!){
@@ -144,6 +136,10 @@
     postedBy
   }}")
 
+(def delete-comment
+  "comment_delete($id:String!){
+  comment_delete(id:$id)}")
+
 (def get-user-comments
   "
   user_comments($user:String!){
@@ -154,4 +150,19 @@
     text
     votes
     postedBy
+  }}")
+
+(def post-comment
+  "comment_post($id:String!, $comment:String!, $type:String!){
+  comment_post(id:$id, comment:$comment, type:$type){
+  id
+  text
+  postedBy
+  createdAt
+  votes
+  position
+  depth
+  fatherName
+  father
+  error
   }}")

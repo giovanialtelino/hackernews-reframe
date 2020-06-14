@@ -89,6 +89,11 @@
              (assoc db :pwd pwd)))
 
 (re-frame/reg-event-db
+  ::new-comment
+  (fn-traced [db [_ father comment]]
+             (assoc db :new-comment comment :new-comment-father father)))
+
+(re-frame/reg-event-db
   ::change-new-pwd
   (fn-traced [db [_ pwd]]
              (assoc db :new-pwd pwd)))
@@ -354,11 +359,23 @@
   (fn [{db :db} [_ father extra]]
     {:db (assoc db :main-father father)}))
 
-(re-frame/reg-event-db
+(defn- specific-news-list-value [id news-list]
+  (let [news-count (count news-list)]
+    (loop [i 0
+           found nil]
+      (if (and (< i news-count) (nil? found))
+        (if (= id (:id (nth news-list i)))
+          (recur (inc i) nil)
+          found)
+        ""
+        ))))
+
+(re-frame/reg-event-fx
   ::result-get-comments-father
-  (fn-traced [db [_ father response]]
-             (let [comments (get-in response [:data :comments])]
-               (assoc db :comment-list comments :main-father father))))
+  (fn [{db :db} [_ father response]]
+    (let [comments (get-in response [:data :comments])]
+      {:db       (assoc db :comment-list comments)
+       :dispatch [::get-link father]})))
 
 (re-frame/reg-event-fx
   ::get-father-comments
@@ -405,4 +422,64 @@
                 graph/get-user-posts
                 {:user user}
                 [::result-get-user-posts]]}))
+
+(defn- remove-comment [comment-list id]
+  (loop [new []
+         i 0]
+    (if (< i (count comment-list))
+      (if (= (:id (nth comment-list i)) id)
+        (recur new (inc i))
+        (recur (conj new (nth comment-list i)) (inc i)))
+      new)))
+
+(re-frame/reg-event-fx
+  ::result-delete-comment
+  (fn [{db :db} [_ id response]]
+    (let [result (get-in response [:data :comment_delete])]
+      (if (= result "Post deleted")
+        {:db (assoc db :comment-list (remove-comment (:comment-list db) id))}
+        (println result)
+        ))))
+
+(re-frame/reg-event-fx
+  ::delete-comment
+  (fn [_ [_ id]]
+    {:dispatch [::re-graph/mutate
+                graph/delete-comment
+                {:id id}
+                [::result-delete-comment id]]}))
+
+(re-frame/reg-event-fx
+  ::result-get-link
+  (fn [{db :db} [_ response]]
+    (let [result (get-in response [:data :link])]
+      {:db (assoc db :main-father result)})))
+
+(re-frame/reg-event-fx
+  ::get-link
+  (fn [_ [_ id]]
+    {:dispatch [::re-graph/query
+                graph/get-link
+                {:id id}
+                [::result-get-link]]}))
+
+(re-frame/reg-event-db
+  ::result-post-comment
+  (fn-traced [db [_ response]]
+             (let [returned-comment (get-in response [:data :comment_post])
+                   comments (:comment-list db)
+                   conj-comments (conj comments returned-comment)]
+               (assoc db :comment-list conj-comments :new-comment "" :new-comment-father ""))))
+
+(re-frame/reg-event-fx
+  ::post-comment
+  (fn [_ [_ type]]
+    (let [comment @(re-frame/subscribe [::subs/new-comment])
+          father @(re-frame/subscribe [::subs/new-comment-father])]
+      {:dispatch [::re-graph/mutate
+                  graph/post-comment
+                  {:comment comment
+                   :type    type
+                   :id      father}
+                  [::result-post-comment]]})))
 

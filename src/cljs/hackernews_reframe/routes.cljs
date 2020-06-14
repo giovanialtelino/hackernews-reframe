@@ -59,6 +59,12 @@
             (re-frame/dispatch [::events/get-father-comments father])
             (re-frame/dispatch [::events/set-active-panel :comment-panel]))
 
+  (defroute reply-comment "/reply-comments/:comment" [comment]
+            (re-frame/dispatch-sync [::events/start-headers])
+            (re-frame/dispatch [::events/refresh])
+            (re-frame/dispatch [::events/get-father-comments comment])
+            (re-frame/dispatch [::events/set-active-panel :comment-panel]))
+
   (defroute user-comments "/user-comments/:user" [user]
             (re-frame/dispatch-sync [::events/start-headers])
             (re-frame/dispatch [::events/refresh])

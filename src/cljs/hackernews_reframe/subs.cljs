@@ -126,3 +126,16 @@
   ::comments-list
   (fn [db _]
     (get-in db [:comment-list])))
+
+(re-frame/reg-sub
+  ::new-comment
+  (fn [db _]
+    (get-in db [:new-comment])))
+
+(re-frame/reg-sub
+  ::new-comment-father
+  (fn [db _]
+    (get-in db [:new-comment-father])))
+
+
+
