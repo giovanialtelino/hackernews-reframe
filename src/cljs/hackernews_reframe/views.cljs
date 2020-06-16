@@ -33,7 +33,41 @@
                     [:textarea.textarea.is-info {:rows      3
                                                  :value     @(re-frame/subscribe [::subs/new-comment])
                                                  :on-change #(re-frame/dispatch [::events/new-comment id (-> % .-target .-value)])}]
-                    [:button.button.button-spacer {:on-click #(re-frame/dispatch [::events/post-comment "link"])} "Post comment"]]]]]]))
+                    [:button.button.button-spacer {:on-click #(re-frame/dispatch [::events/post-comment])} "Post comment"]]]]]]))
+
+(defn- answer-comment [comment]
+  (let [{id        :id
+         linkId    :linkId
+         linkText  :linkText
+         postedBy  :postedBy
+         text      :text
+         createdAt :createdAt
+         } comment]
+    (println linkId)
+    [:article.media
+     [:figure.media-left
+      [:a.like-dislike
+       {:on-click #(re-frame/dispatch [::events/vote id])}
+       [:i.fas.fa-arrow-up]]]
+     [:div.media-content
+      [:div#small-content.content
+       [:small [:a {:href (routes/hn-user {:name postedBy})} postedBy]] [:small " posted at " createdAt] [:small " | on: " [:a {:href (routes/hn-comment linkId)} linkText] ""]
+       [:p [:strong text]]]
+      [:nav.level.is-mobile
+       [:div.content
+        [:a {:href (routes/hn-comment {:father id})}]
+        [:div.control
+         [:textarea.textarea.is-info {:rows      3
+                                      :value     @(re-frame/subscribe [::subs/new-comment])
+                                      :on-change #(re-frame/dispatch [::events/new-comment id (-> % .-target .-value)])}]
+         [:button.button.button-spacer {:on-click #(re-frame/dispatch [::events/post-comment])} "Post comment"]]]]]]))
+
+(defn answer-comment-panel []
+  (let [comment @(re-frame/subscribe [::subs/reply-comment])]
+    [:div.container-fluid
+     (if-not (nil? comment)
+       (answer-comment comment))]
+    ))
 
 (defn- comment-row [comment-id posted-by comment date votes lvl]
   (let [username @(re-frame/subscribe [::subs/username])
@@ -86,13 +120,14 @@
         main @(re-frame/subscribe [::subs/comment-father])]
     [:div.container-fluid
      (if-not (nil? main) (main-link main))
-     (for [i (range (count comment-list))]
-       (comment-row (:id (nth comment-list i))
-                    (:postedBy (nth comment-list i))
-                    (:text (nth comment-list i))
-                    (:createdAt (nth comment-list i))
-                    (:votes (nth comment-list i))
-                    (:lvl (nth comment-list i))))]))
+     (if-not (nil? comment-list)
+       (for [i (range (count comment-list))]
+         (comment-row (:id (nth comment-list i))
+                      (:postedBy (nth comment-list i))
+                      (:text (nth comment-list i))
+                      (:createdAt (nth comment-list i))
+                      (:votes (nth comment-list i))
+                      (:lvl (nth comment-list i)))))]))
 
 
 (defn- extract-news-panel [item]
@@ -360,6 +395,7 @@
     :past-panel [past-panel]
     :sign-panel [sign-panel]
     :comment-panel [comment-panel]
+    :answer-comment-panel [answer-comment-panel]
     :user-panel [user-panel]
     :generic-user-panel [generic-user-panel]
     [:div]))

@@ -56,14 +56,16 @@
             (re-frame/dispatch-sync [::events/start-headers])
             (re-frame/dispatch [::events/refresh])
             (re-frame/dispatch-sync [::events/clean-comments])
+            (re-frame/dispatch [::events/change-comment-type "link"])
             (re-frame/dispatch [::events/get-father-comments father])
             (re-frame/dispatch [::events/set-active-panel :comment-panel]))
 
   (defroute reply-comment "/reply-comments/:comment" [comment]
             (re-frame/dispatch-sync [::events/start-headers])
             (re-frame/dispatch [::events/refresh])
-            (re-frame/dispatch [::events/get-father-comments comment])
-            (re-frame/dispatch [::events/set-active-panel :comment-panel]))
+            (re-frame/dispatch [::events/change-comment-type "comment"])
+            (re-frame/dispatch [::events/get-comment comment])
+            (re-frame/dispatch [::events/set-active-panel :answer-comment-panel]))
 
   (defroute user-comments "/user-comments/:user" [user]
             (re-frame/dispatch-sync [::events/start-headers])

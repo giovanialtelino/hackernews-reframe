@@ -84,6 +84,11 @@
              (assoc db :new-usr email)))
 
 (re-frame/reg-event-db
+  ::change-comment-type
+  (fn-traced [db [_ type]]
+             (assoc db :comment-type type)))
+
+(re-frame/reg-event-db
   ::change-pwd
   (fn-traced [db [_ pwd]]
              (assoc db :pwd pwd)))
@@ -385,6 +390,20 @@
                 {:father father}
                 [::result-get-comments-father father]]}))
 
+(re-frame/reg-event-fx
+  ::result-get-comments
+  (fn [{db :db} [_ response]]
+    (let [comment (get-in response [:data :comment])]
+    {:db (assoc db :reply-comment comment)})))
+
+(re-frame/reg-event-fx
+  ::get-comment
+  (fn [_ [_ comment]]
+    {:dispatch [::re-graph/query
+                graph/get-comment
+                {:id comment}
+                [::result-get-comments]]}))
+
 (re-frame/reg-event-db
   ::clean-comments
   (fn [db _]
@@ -473,9 +492,10 @@
 
 (re-frame/reg-event-fx
   ::post-comment
-  (fn [_ [_ type]]
+  (fn [_ [_ _]]
     (let [comment @(re-frame/subscribe [::subs/new-comment])
-          father @(re-frame/subscribe [::subs/new-comment-father])]
+          father @(re-frame/subscribe [::subs/new-comment-father])
+          type @(re-frame/subscribe [::subs/comment-type])]
       {:dispatch [::re-graph/mutate
                   graph/post-comment
                   {:comment comment

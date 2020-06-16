@@ -137,5 +137,14 @@
   (fn [db _]
     (get-in db [:new-comment-father])))
 
+(re-frame/reg-sub
+  ::comment-type
+  (fn [db _]
+    (get-in db [:comment-type])))
+
+(re-frame/reg-sub
+  ::reply-comment
+  (fn [db _]
+    (get-in db [:reply-comment])))
 
 

@@ -29,14 +29,19 @@
 (def get-comment
   "comment($id:String!){
   comment(id:$id){
-  child
-  father_id
-  father_name
-  id
-  postedBy
-  postedSince
-  text
-  votes
+      depth
+      error
+          father
+              fatherName
+                  id
+                  link
+                   linkText
+                   linkId
+                   createdAt
+                       position
+                           postedBy
+                               text
+                                   votes
   }}")
 
 (def feed
