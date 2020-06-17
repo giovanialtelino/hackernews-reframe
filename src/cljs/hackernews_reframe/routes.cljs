@@ -21,7 +21,7 @@
   (secretary/set-config! :prefix "#")
   ;; --------------------
   ;; define routes here
-  (defroute "/" []
+  (defroute home "/" []
             (re-frame/dispatch-sync [::events/clean-posts])
             (re-frame/dispatch-sync [::events/start-headers])
             (re-frame/dispatch [::events/refresh])
@@ -29,25 +29,25 @@
             (re-frame/dispatch [::events/get-news])
             )
 
-  (defroute "/login" []
+  (defroute login "/login" []
             (re-frame/dispatch-sync [::events/start-headers])
             (re-frame/dispatch [::events/refresh])
             (re-frame/dispatch [::events/set-active-panel :login-panel])
             )
 
-  (defroute "/sign" []
+  (defroute sign "/sign" []
             (re-frame/dispatch-sync [::events/start-headers])
             (re-frame/dispatch [::events/refresh])
             (re-frame/dispatch [::events/set-active-panel :sign-panel])
             )
 
-  (defroute "/submit" []
+  (defroute submit "/submit" []
             (re-frame/dispatch-sync [::events/start-headers])
             (re-frame/dispatch [::events/refresh])
             (re-frame/dispatch [::events/set-active-panel :post-panel])
             )
 
-  (defroute "/past" []
+  (defroute past "/past" []
             (re-frame/dispatch-sync [::events/start-headers])
             (re-frame/dispatch [::events/refresh])
             (re-frame/dispatch [::events/set-active-panel :past-panel]))
@@ -81,7 +81,7 @@
             (re-frame/dispatch [::events/get-user-posts user])
             (re-frame/dispatch [::events/set-active-panel :news-panel]))
 
-  (defroute "/user" []
+  (defroute user "/user" []
             (re-frame/dispatch-sync [::events/start-headers])
             (re-frame/dispatch [::events/refresh])
             (re-frame/dispatch [::events/set-active-panel :user-panel]))

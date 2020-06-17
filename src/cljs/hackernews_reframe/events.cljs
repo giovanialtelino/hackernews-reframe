@@ -5,6 +5,7 @@
     [day8.re-frame.tracing :refer-macros [fn-traced]]
     [re-graph.core :as re-graph]
     [hackernews-reframe.subs :as subs]
+    [secretary.core :as secretary]
     [hackernews-reframe.graphql :as graph]))
 
 (defn- add-local-storage [key value]
@@ -30,15 +31,18 @@
 
 (re-frame/reg-event-fx
   ::start-headers
-  (fn [_ _]
+  (fn [{db :db} _]
     (let [token (get-local-storage "token")
-          refresh (get-local-storage "refresh-token")]
-      {:dispatch [::update-re-graph [token refresh]]})))
+          refresh (get-local-storage "refresh-token")
+          username (get-local-storage "username")]
+      {:db       (assoc db :username username)
+       :dispatch [::update-re-graph [token refresh]]})))
 
 (re-frame/reg-fx
   :set-local-store
   (fn [array]
     (let [keys (first array)]
+      (add-local-storage "username" (:username keys))
       (add-local-storage "token" (:token keys))
       (add-local-storage "refresh-token" (:refresh keys)))))
 
@@ -46,6 +50,12 @@
   :dispatch-panel
   (fn [panel]
     (re-frame/dispatch [::set-active-panel panel])))
+
+(re-frame/reg-fx
+  :dispatch-directly
+  (fn [route]
+    (set! (.-hash (.-location js/window))
+          (str "#" (first route)))))
 
 (re-frame/reg-fx
   :remove-local-store
@@ -95,8 +105,8 @@
 
 (re-frame/reg-event-db
   ::new-comment
-  (fn-traced [db [_ father comment]]
-             (assoc db :new-comment comment :new-comment-father father)))
+  (fn-traced [db [_ comment]]
+             (assoc db :new-comment comment)))
 
 (re-frame/reg-event-db
   ::change-new-pwd
@@ -394,7 +404,7 @@
   ::result-get-comments
   (fn [{db :db} [_ response]]
     (let [comment (get-in response [:data :comment])]
-    {:db (assoc db :reply-comment comment)})))
+      {:db (assoc db :reply-comment comment)})))
 
 (re-frame/reg-event-fx
   ::get-comment
@@ -482,24 +492,29 @@
                 {:id id}
                 [::result-get-link]]}))
 
-(re-frame/reg-event-db
+(re-frame/reg-event-fx
   ::result-post-comment
-  (fn-traced [db [_ response]]
-             (let [returned-comment (get-in response [:data :comment_post])
-                   comments (:comment-list db)
-                   conj-comments (conj comments returned-comment)]
-               (assoc db :comment-list conj-comments :new-comment "" :new-comment-father ""))))
+  (fn [{db :db} [_ response]]
+    (let [returned-comment (get-in response [:data :comment_post])]
+      (if (nil? (:error returned-comment))
+        (do
+          {:dispatch-directly [(str "/comments/" (:linkId returned-comment))]
+           :db                (assoc db :reply-comment nil :new-comment nil)})))))
+
+;:dispatch [::change-comment-type "link"] [::get-father-comments (:linkId returned-comment)] [::set-active-panel :comment-panel]
 
 (re-frame/reg-event-fx
   ::post-comment
   (fn [_ [_ _]]
     (let [comment @(re-frame/subscribe [::subs/new-comment])
-          father @(re-frame/subscribe [::subs/new-comment-father])
+          father @(re-frame/subscribe [::subs/new-comment-father-id])
+          link @(re-frame/subscribe [::subs/new-comment-link-id])
           type @(re-frame/subscribe [::subs/comment-type])]
       {:dispatch [::re-graph/mutate
                   graph/post-comment
                   {:comment comment
                    :type    type
-                   :id      father}
+                   :father  father
+                   :link    link}
                   [::result-post-comment]]})))
 

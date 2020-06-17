@@ -43,7 +43,6 @@
          text      :text
          createdAt :createdAt
          } comment]
-    (println linkId)
     [:article.media
      [:figure.media-left
       [:a.like-dislike
@@ -51,7 +50,7 @@
        [:i.fas.fa-arrow-up]]]
      [:div.media-content
       [:div#small-content.content
-       [:small [:a {:href (routes/hn-user {:name postedBy})} postedBy]] [:small " posted at " createdAt] [:small " | on: " [:a {:href (routes/hn-comment linkId)} linkText] ""]
+       [:small [:a {:href (routes/hn-user {:name postedBy})} postedBy]] [:small " posted at " createdAt] [:small " | on: " [:a {:href (routes/hn-comment {:father linkId})} linkText] ""]
        [:p [:strong text]]]
       [:nav.level.is-mobile
        [:div.content
@@ -59,7 +58,7 @@
         [:div.control
          [:textarea.textarea.is-info {:rows      3
                                       :value     @(re-frame/subscribe [::subs/new-comment])
-                                      :on-change #(re-frame/dispatch [::events/new-comment id (-> % .-target .-value)])}]
+                                      :on-change #(re-frame/dispatch [::events/new-comment (-> % .-target .-value)])}]
          [:button.button.button-spacer {:on-click #(re-frame/dispatch [::events/post-comment])} "Post comment"]]]]]]))
 
 (defn answer-comment-panel []
@@ -407,7 +406,7 @@
   [:div.container-fluid
    [:nav#main-nav.navbar.item-a {:role "navigation" :aria-label "main navigation"}
     [:div.navbar-brand
-     [:a.navbar-item {:href "#/"}
+     [:a.navbar-item {:href (routes/home)}
       [:i#h-n.fab.fa-hacker-news]]
      [:a.navbar-burger.burger {:role "button" :aria-label "menu" :aria-expanded "false" :data-target "navbarBasicExample"}
       [:span {:aria-hidden "true"}]
@@ -415,18 +414,18 @@
       [:span {:aria-hidden "true"}]]]
     [:div#navbarBasicExample.navbar-menu
      [:div.navbar-start
-      [:a.navbar-item {:href "#/"} "News"]
-      [:a.navbar-item {:href "#/submit"} "Submit"]]
+      [:a.navbar-item {:href (routes/home)} "News"]
+      [:a.navbar-item {:href (routes/submit)} "Submit"]]
      [:div.navbar-end
       [:div.navbar-item
        (let [is-logged-in @(re-frame/subscribe [::subs/username])]
          (if (nil? is-logged-in)
            [:div.buttons
-            [:a.button {:href "#/sign"} "Sign up"]
-            [:a.button {:href "#/login"} "Log in"]]
+            [:a.button {:href (routes/sign)} "Sign up"]
+            [:a.button {:href (routes/login)} "Log in"]]
            [:div.buttons
-            [:a.navbar-item {:href "#/user"} is-logged-in]
-            [:a.navbar-item {:href     "#/"
+            [:a.navbar-item {:href (routes/user)} is-logged-in]
+            [:a.navbar-item {:href     (routes/home)
                              :on-click #(re-frame/dispatch [::events/logout])} "logout"]]))]]]]
    (let [active-panel (re-frame/subscribe [::subs/active-panel])]
      [show-panel @active-panel])

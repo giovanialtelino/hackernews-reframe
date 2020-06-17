@@ -158,16 +158,7 @@
   }}")
 
 (def post-comment
-  "comment_post($id:String!, $comment:String!, $type:String!){
-  comment_post(id:$id, comment:$comment, type:$type){
-  id
-  text
-  postedBy
-  createdAt
-  votes
-  position
-  depth
-  fatherName
-  father
-  error
+  "comment_post($link:String!, $father:String!, $comment:String!, $type:String!){
+  comment_post(link:$link, father:$father, comment:$comment, type:$type){
+  depth\n      error\n          father\n              fatherName\n                  id\n                  link\n                   linkText\n                   linkId\n                   createdAt\n                       position\n                           postedBy\n                               text\n                                   votes
   }}")
