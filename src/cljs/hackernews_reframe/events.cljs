@@ -163,7 +163,7 @@
                                                :created-at-user created-at
                                                :karma-user      karma}))
        :dispatch        [::update-re-graph [token refresh]]
-       :set-local-store [{:token token :refresh refresh}]})))
+       :set-local-store [{:token token :refresh refresh :username username}]})))
 
 (re-frame/reg-event-fx
   ::login-result
@@ -466,9 +466,7 @@
   (fn [{db :db} [_ id response]]
     (let [result (get-in response [:data :comment_delete])]
       (if (= result "Post deleted")
-        {:db (assoc db :comment-list (remove-comment (:comment-list db) id))}
-        (println result)
-        ))))
+        {:db (assoc db :comment-list (remove-comment (:comment-list db) id))}))))
 
 (re-frame/reg-event-fx
   ::delete-comment
@@ -494,27 +492,32 @@
 
 (re-frame/reg-event-fx
   ::result-post-comment
-  (fn [{db :db} [_ response]]
-    (let [returned-comment (get-in response [:data :comment_post])]
+  (fn [{db :db} [_ type response]]
+    (println type)
+    (let [returned-comment (get-in response [:data :comment_post])
+          result-map {:dispatch-directly [(str "/comments/" (:linkId returned-comment))]
+                      :db                (assoc db :reply-comment "" :new-comment "")}]
       (if (nil? (:error returned-comment))
-        (do
-          {:dispatch-directly [(str "/comments/" (:linkId returned-comment))]
-           :db                (assoc db :reply-comment nil :new-comment nil)})))))
-
-;:dispatch [::change-comment-type "link"] [::get-father-comments (:linkId returned-comment)] [::set-active-panel :comment-panel]
+        (if (= type "link")
+          (merge result-map {:dispatch [::get-father-comments (:linkId returned-comment)]})
+          result-map)))))
 
 (re-frame/reg-event-fx
   ::post-comment
   (fn [_ [_ _]]
     (let [comment @(re-frame/subscribe [::subs/new-comment])
-          father @(re-frame/subscribe [::subs/new-comment-father-id])
-          link @(re-frame/subscribe [::subs/new-comment-link-id])
-          type @(re-frame/subscribe [::subs/comment-type])]
+          type @(re-frame/subscribe [::subs/comment-type])
+          father (if (= type "link")
+                   @(re-frame/subscribe [::subs/main-father-id])
+                   @(re-frame/subscribe [::subs/new-comment-father-id]))
+          link (if (= type "link")
+                 @(re-frame/subscribe [::subs/main-father-id])
+                 @(re-frame/subscribe [::subs/new-comment-link-id]))]
       {:dispatch [::re-graph/mutate
                   graph/post-comment
                   {:comment comment
                    :type    type
                    :father  father
                    :link    link}
-                  [::result-post-comment]]})))
+                  [::result-post-comment type]]})))
 

@@ -135,13 +135,17 @@
 (re-frame/reg-sub
   ::new-comment-father-id
   (fn [db _]
-    (get-in db [:reply-comment :father])))
+    (get-in db [:reply-comment :id])))
+
+(re-frame/reg-sub
+  ::main-father-id
+  (fn [db _]
+    (get-in db [:main-father :id])))
 
 (re-frame/reg-sub
   ::new-comment-link-id
   (fn [db _]
     (get-in db [:reply-comment :linkId])))
-
 
 (re-frame/reg-sub
   ::comment-type

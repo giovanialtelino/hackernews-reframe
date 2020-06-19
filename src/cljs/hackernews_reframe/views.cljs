@@ -32,7 +32,7 @@
                    [:div.control
                     [:textarea.textarea.is-info {:rows      3
                                                  :value     @(re-frame/subscribe [::subs/new-comment])
-                                                 :on-change #(re-frame/dispatch [::events/new-comment id (-> % .-target .-value)])}]
+                                                 :on-change #(re-frame/dispatch [::events/new-comment (-> % .-target .-value)])}]
                     [:button.button.button-spacer {:on-click #(re-frame/dispatch [::events/post-comment])} "Post comment"]]]]]]))
 
 (defn- answer-comment [comment]
@@ -65,8 +65,7 @@
   (let [comment @(re-frame/subscribe [::subs/reply-comment])]
     [:div.container-fluid
      (if-not (nil? comment)
-       (answer-comment comment))]
-    ))
+       (answer-comment comment))]))
 
 (defn- comment-row [comment-id posted-by comment date votes lvl]
   (let [username @(re-frame/subscribe [::subs/username])
@@ -114,20 +113,63 @@
                       [:a.level-item {:on-click #(re-frame/dispatch [::events/remove-view post-id])} [:small "hide"]]
                       [:a.level-item {:href (routes/hn-comment {:father post-id})} [:small " " comments-count " comments"]]]]]])
 
+(defn- remove-by-index [v i]
+  (vec (concat (subvec v 0 i) (subvec v (inc i)))))
+
+(defn- insert-index [v i e]
+  (vec (concat (subvec v 0 i) [e] (subvec v i))))
+
+(defn- organize-print-comments-linear-second-step [a m]
+  (let [missing m]
+    (loop [i 0
+           f 0
+           depth 1
+           added a           ]
+      (if (< i (count missing))
+        (if (= (:id (nth added f)) (:father (nth missing i)))
+          (recur (inc i) f depth (insert-index added (inc f) {:id  (:id (nth missing i))
+                                                        :row (comment-row (:id (nth missing i))
+                                                                          (:postedBy (nth missing i))
+                                                                          (:text (nth missing i))
+                                                                          (:createdAt (nth missing i))
+                                                                          (:votes (nth missing i))
+                                                                          (* depth 3))}))
+          (recur (inc i) f depth added))
+        (if (< f (dec (count added)))
+          (recur 0 (inc f) (inc depth) added)
+          added)))))
+
+ (defn- organize-print-comments-linear [comments first-father]
+  (let [counter (count comments)]
+    (loop [i 0
+           father first-father
+           missing []
+           added []]
+      (if (< i counter)
+        (if (= father (:father (nth comments i)))
+          (recur (inc i) father missing (conj added {:id  (:id (nth comments i))
+                                                     :row (comment-row (:id (nth comments i))
+                                                                       (:postedBy (nth comments i))
+                                                                       (:text (nth comments i))
+                                                                       (:createdAt (nth comments i))
+                                                                       (:votes (nth comments i))
+                                                                       0)}))
+          (recur (inc i) father (conj missing (nth comments i)) added))
+        (if (empty? missing)
+          added
+          (organize-print-comments-linear-second-step added missing))))))
+
 (defn comment-panel []
   (let [comment-list @(re-frame/subscribe [::subs/comments-list])
-        main @(re-frame/subscribe [::subs/comment-father])]
+        main @(re-frame/subscribe [::subs/comment-father])
+        main-father-id (:id main)]
     [:div.container-fluid
      (if-not (nil? main) (main-link main))
-     (if-not (nil? comment-list)
-       (for [i (range (count comment-list))]
-         (comment-row (:id (nth comment-list i))
-                      (:postedBy (nth comment-list i))
-                      (:text (nth comment-list i))
-                      (:createdAt (nth comment-list i))
-                      (:votes (nth comment-list i))
-                      (:lvl (nth comment-list i)))))]))
-
+     (if (and (not (nil? main-father-id)) (not (empty? comment-list)))
+       (let [comments (organize-print-comments-linear comment-list main-father-id)
+             counter (count comments)]
+         (for [i (range counter)]
+           (:row (nth comments i)))))]))
 
 (defn- extract-news-panel [item]
   (let [{description :description
