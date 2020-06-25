@@ -12,6 +12,13 @@ There are still features to be added, like editing comments, and also the websit
 
 Keep in mind that this is just the front-end of the app, the back-end is located [here](https://github.com/giovanialtelino/hackernews-lacinia-datomic).
 
+## Manual testing
+
+If you want to login after dealing with the back-end you can use one of the default accounts like:  
+User: 1@com.com Password: pwd1
+
+Or you can also create an account with any kind of fake e-mail.
+
 ## Docs and more thoughts
 
 Check [this](https://www.giovanialtelino.com/project/hacker-news-graphql) page on my blog to better understand this project.

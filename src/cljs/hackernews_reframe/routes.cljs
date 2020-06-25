@@ -44,8 +44,7 @@
   (defroute submit "/submit" []
             (re-frame/dispatch-sync [::events/start-headers])
             (re-frame/dispatch [::events/refresh])
-            (re-frame/dispatch [::events/set-active-panel :post-panel])
-            )
+            (re-frame/dispatch [::events/set-active-panel :post-panel]))
 
   (defroute past "/past" []
             (re-frame/dispatch-sync [::events/start-headers])

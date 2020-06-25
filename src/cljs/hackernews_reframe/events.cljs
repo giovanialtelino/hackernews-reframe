@@ -26,8 +26,7 @@
 (re-frame/reg-event-fx
   ::update-re-graph
   (fn [{db :db} [_ [token refresh]]]
-    {:db (-> db
-             (assoc-in [:re-graph :re-graph.internals/default :http-parameters :headers] {"Authorization" token "Refresh" refresh}))}))
+    {:db (assoc-in db [:re-graph :re-graph.internals/default :http-parameters :headers] {"Authorization" token "Refresh" refresh})}))
 
 (re-frame/reg-event-fx
   ::start-headers
@@ -61,6 +60,7 @@
   :remove-local-store
   (fn []
     (remove-local-storage "token")
+    (remove-local-storage "username")
     (remove-local-storage "refresh-token")))
 
 (re-frame/reg-event-db
@@ -234,8 +234,7 @@
                   {:email    email
                    :password pwd}
                   [::login-result]]
-       :db       (-> db
-                     (assoc :loading? true))})))
+       :db       (assoc db :loading? true)})))
 
 (re-frame/reg-event-fx
   ::refresh
@@ -247,8 +246,7 @@
                     graph/refresh
                     {}
                     [::refresh-result]]
-         :db       (-> db
-                       (assoc :loading? true))}))))
+         :db       (assoc db :loading? true)}))))
 
 (re-frame/reg-event-fx
   ::sign
@@ -262,8 +260,7 @@
                    :password pwd
                    :name     name}
                   [::signup-result]]
-       :db       (-> db
-                     (assoc :loading? true))})))
+       :db       (assoc db :loading? true)})))
 
 (re-frame/reg-event-fx
   ::submit-result
@@ -287,8 +284,7 @@
   (fn [{db :db} _]
     {:remove-local-store []
      :dispatch           [::update-re-graph nil]
-     :db                 (-> db
-                             (assoc :username nil))}))
+     :db                 (assoc db :username nil)}))
 
 (re-frame/reg-event-fx
   ::get-news-result
@@ -520,4 +516,3 @@
                    :father  father
                    :link    link}
                   [::result-post-comment type]]})))
-

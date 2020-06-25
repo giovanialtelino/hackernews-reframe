@@ -4,8 +4,7 @@
     [re-frame.core :as re-frame]
     [hackernews-reframe.subs :as subs]
     [hackernews-reframe.events :as events]
-    [hackernews-reframe.routes :as routes]
-    ))
+    [hackernews-reframe.routes :as routes]))
 
 (defn- main-link [main]
   (let [{description :description
@@ -113,9 +112,6 @@
                       [:a.level-item {:on-click #(re-frame/dispatch [::events/remove-view post-id])} [:small "hide"]]
                       [:a.level-item {:href (routes/hn-comment {:father post-id})} [:small " " comments-count " comments"]]]]]])
 
-(defn- remove-by-index [v i]
-  (vec (concat (subvec v 0 i) (subvec v (inc i)))))
-
 (defn- insert-index [v i e]
   (vec (concat (subvec v 0 i) [e] (subvec v i))))
 
@@ -124,22 +120,22 @@
     (loop [i 0
            f 0
            depth 1
-           added a           ]
+           added a]
       (if (< i (count missing))
         (if (= (:id (nth added f)) (:father (nth missing i)))
           (recur (inc i) f depth (insert-index added (inc f) {:id  (:id (nth missing i))
-                                                        :row (comment-row (:id (nth missing i))
-                                                                          (:postedBy (nth missing i))
-                                                                          (:text (nth missing i))
-                                                                          (:createdAt (nth missing i))
-                                                                          (:votes (nth missing i))
-                                                                          (* depth 3))}))
+                                                              :row (comment-row (:id (nth missing i))
+                                                                                (:postedBy (nth missing i))
+                                                                                (:text (nth missing i))
+                                                                                (:createdAt (nth missing i))
+                                                                                (:votes (nth missing i))
+                                                                                (* depth 3))}))
           (recur (inc i) f depth added))
         (if (< f (dec (count added)))
           (recur 0 (inc f) (inc depth) added)
           added)))))
 
- (defn- organize-print-comments-linear [comments first-father]
+(defn- organize-print-comments-linear [comments first-father]
   (let [counter (count comments)]
     (loop [i 0
            father first-father
