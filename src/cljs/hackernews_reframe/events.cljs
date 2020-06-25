@@ -187,7 +187,7 @@
                                                         :created-at-user created-at
                                                         :karma-user      karma}))
                 :dispatch        [::update-re-graph [token refresh]]
-                :set-local-store [{:token token :refresh refresh}]}]
+                :set-local-store [{:token token :refresh refresh :username username}]}]
       (if (and (nil? error) (not (nil? token)))
         (merge rmap {:dispatch-panel :news-panel})
         rmap
@@ -218,7 +218,7 @@
                                                         :created-at-user created-at
                                                         :karma-user      karma}))
                 :dispatch        [::update-re-graph [token refresh]]
-                :set-local-store [{:token token :refresh refresh}]}]
+                :set-local-store [{:token token :refresh refresh :username username}]}]
       (if (and (nil? error) (not (nil? token)))
         (merge rmap {:dispatch-panel :news-panel})
         rmap

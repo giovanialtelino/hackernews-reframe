@@ -115,45 +115,46 @@
 (defn- insert-index [v i e]
   (vec (concat (subvec v 0 i) [e] (subvec v i))))
 
-(defn- organize-print-comments-linear-second-step [a m]
-  (let [missing m]
-    (loop [i 0
-           f 0
-           depth 1
-           added a]
-      (if (< i (count missing))
-        (if (= (:id (nth added f)) (:father (nth missing i)))
-          (recur (inc i) f depth (insert-index added (inc f) {:id  (:id (nth missing i))
-                                                              :row (comment-row (:id (nth missing i))
-                                                                                (:postedBy (nth missing i))
-                                                                                (:text (nth missing i))
-                                                                                (:createdAt (nth missing i))
-                                                                                (:votes (nth missing i))
-                                                                                (* depth 3))}))
-          (recur (inc i) f depth added))
-        (if (< f (dec (count added)))
-          (recur 0 (inc f) (inc depth) added)
-          added)))))
+(defn- remove-by-index [v i]
+  (vec (concat (subvec v 0 i) (subvec v (inc i)))))
 
-(defn- organize-print-comments-linear [comments first-father]
-  (let [counter (count comments)]
-    (loop [i 0
-           father first-father
-           missing []
-           added []]
-      (if (< i counter)
-        (if (= father (:father (nth comments i)))
-          (recur (inc i) father missing (conj added {:id  (:id (nth comments i))
-                                                     :row (comment-row (:id (nth comments i))
-                                                                       (:postedBy (nth comments i))
-                                                                       (:text (nth comments i))
-                                                                       (:createdAt (nth comments i))
-                                                                       (:votes (nth comments i))
-                                                                       0)}))
-          (recur (inc i) father (conj missing (nth comments i)) added))
-        (if (empty? missing)
-          added
-          (organize-print-comments-linear-second-step added missing))))))
+(defn- organize-print-comments-linear-second-step [a m]
+  (loop [i (dec (count m))
+         f 0
+         depth 1
+         added a
+         missing m]
+    (if (< 0 i)
+      (if (= (:father (nth missing i)) (:id (nth added f)))
+        (recur (dec i) f depth (insert-index added (inc f) {:id  (:id (nth missing i))
+                                                                  :row (comment-row (:id (nth missing i))
+                                                                                    (:postedBy (nth missing i))
+                                                                                    (:text (nth missing i))
+                                                                                    (:createdAt (nth missing i))
+                                                                                    (:votes (nth missing i))
+                                                                                    (* depth 3))}) (remove-by-index missing i))
+        (recur (dec i) f depth added missing))
+      (if (> (dec (count added)) f)
+        (recur (dec (count missing)) (inc f) (inc depth) added missing)
+        added))))
+
+(defn- organize-print-comments-linear [comments father]
+  (loop [i (dec (count comments))
+         missing []
+         added []]
+    (if (< 0 i)
+      (if (= father (:father (nth comments i)))
+        (recur (dec i) missing (conj added {:id  (:id (nth comments i))
+                                            :row (comment-row (:id (nth comments i))
+                                                              (:postedBy (nth comments i))
+                                                              (:text (nth comments i))
+                                                              (:createdAt (nth comments i))
+                                                              (:votes (nth comments i))
+                                                              0)}))
+        (recur (dec i) (conj missing (nth comments i)) added))
+      (if (empty? missing)
+        added
+        (organize-print-comments-linear-second-step added missing)))))
 
 (defn comment-panel []
   (let [comment-list @(re-frame/subscribe [::subs/comments-list])
